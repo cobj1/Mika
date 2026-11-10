@@ -20,4 +20,6 @@
     <string name="setup_auto_model_unavailable">「설정 → 모델」에서 주 모델을 구성하고 선택하세요. 고정 규칙을 통한 자동 설정이나 수동 설정은 계속 사용할 수 있습니다.</string>
     <string name="setup_auto_model_thinking">현재 모델로 다음 설정 단계를 확인하는 중…</string>
     <string name="setup_auto_model_failed">모델이 적절한 다음 단계를 찾지 못했습니다. Mika로 돌아가 수동으로 계속하거나 다시 시도하세요.</string>
+    <string name="setup_auto_usb_visual_info">컨트롤을 읽을 수 없으면 기기에서 USB 디버깅 화면의 스크린샷을 인식합니다. 스크린샷은 업로드하지 않습니다. 시스템 확인은 직접 진행해야 합니다.</string>
+    <string name="setup_auto_usb_visual">화면을 인식하는 중…</string>
 </resources>

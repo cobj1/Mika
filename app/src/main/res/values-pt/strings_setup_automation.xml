@@ -20,4 +20,6 @@
     <string name="setup_auto_model_unavailable">Configure e selecione um modelo principal em Configurações → Modelos. As regras automáticas e a configuração manual continuam disponíveis.</string>
     <string name="setup_auto_model_thinking">O modelo atual está identificando a próxima etapa…</string>
     <string name="setup_auto_model_failed">O modelo não identificou uma próxima etapa adequada. Volte ao Mika para continuar manualmente ou tente novamente.</string>
+    <string name="setup_auto_usb_visual_info">Se os controles não puderem ser lidos, a Mika tentará reconhecer a tela de depuração USB no dispositivo. As capturas não são enviadas. Você ainda precisa confirmar os avisos do sistema.</string>
+    <string name="setup_auto_usb_visual">Reconhecendo a tela…</string>
 </resources>

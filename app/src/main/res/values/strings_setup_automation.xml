@@ -20,4 +20,6 @@
     <string name="setup_auto_model_unavailable">Configure and select a main model in Settings → Models to enable assistance. Automatic rules and manual setup remain available.</string>
     <string name="setup_auto_model_thinking">The current model is identifying the next setup step…</string>
     <string name="setup_auto_model_failed">The model could not identify a suitable next step. Return to Mika to continue manually, or try again.</string>
+    <string name="setup_auto_usb_visual_info">When controls cannot be read, Mika will try to recognize the USB debugging screen locally. Screenshots are not uploaded. You still need to confirm system prompts yourself.</string>
+    <string name="setup_auto_usb_visual">Recognizing the screen…</string>
 </resources>

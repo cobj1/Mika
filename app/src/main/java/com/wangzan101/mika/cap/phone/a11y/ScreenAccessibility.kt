@@ -13,6 +13,8 @@ import android.view.Display
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityWindowInfo
 import com.wangzan101.mika.core.uistate.ScreenEvent
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,15 +25,17 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /** Mika 的无障碍服务:操作和事件转给当前已连接实例,任务持有旧实例时也能在重连后恢复。 */
 open class ScreenAccessibility : AccessibilityService() {
 
     private class DisplayEvent(val displayId: Int, val event: AccessibilityEvent)
-
+    private val observedOwners = ObservedWindowOwners()
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        observedOwners.clear()
         // 不少 App 把显示结果的文字控件标成「对无障碍不重要」,不读它们就看不到结果;配置文件里已声明,
         // 这里再按运行时补一次,防止系统沿用旧的服务配置
         serviceInfo?.let { info ->
@@ -57,6 +61,7 @@ open class ScreenAccessibility : AccessibilityService() {
     }
 
     private fun clearInstance() {
+        observedOwners.clear()
         _instance.compareAndSet(this, null)
         overlayHost?.closeAll()
         overlayHost = null
@@ -69,6 +74,14 @@ open class ScreenAccessibility : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         if (instance.value !== this) return
+        // 系统事件的归属元信息可用于校验读不到根节点的窗口；不读事件文字或靠标题猜包名。
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            observedOwners.observe(displayOf(event), event.windowId, event.packageName?.toString())
+        } else if (event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED &&
+            event.windowChanges and AccessibilityEvent.WINDOWS_CHANGE_REMOVED != 0) {
+            // 旧 Android 的移除事件已无法从当前窗口列表找回屏号，按窗口号清除残留身份。
+            observedOwners.remove(displayOf(event), event.windowId)
+        }
         if (event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) windowChanges.tryEmit(Unit)
         if (event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED || event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             windowGeneration.incrementAndGet()
@@ -103,6 +116,10 @@ open class ScreenAccessibility : AccessibilityService() {
     fun windowsOn(displayId: Int): List<AccessibilityWindowInfo> =
         instance.value?.windowsOnAllDisplays?.get(displayId).orEmpty()
 
+    /** 只返回当前服务观察到的系统事件归属；服务重连后必须重新观察，不能复用旧窗口身份。 */
+    internal fun observedWindowPackage(displayId: Int, windowId: Int): String? =
+        if (instance.value === this) observedOwners.packageOf(displayId, windowId) else null
+
     /** 在指定屏上沿 [path] 做一次单指手势;完成返回 true,被取消或无法下发返回 false。 */
     suspend fun gesture(displayId: Int, path: Path, durationMs: Long): Boolean {
         return gesture(displayId, listOf(path), durationMs)
@@ -111,14 +128,21 @@ open class ScreenAccessibility : AccessibilityService() {
     suspend fun gesture(displayId: Int, paths: List<Path>, durationMs: Long): Boolean =
         dispatch(displayId, paths.map { GestureDescription.StrokeDescription(it, 0, durationMs.coerceAtLeast(1)) })
 
+    /** 等待输入锁和浮层调整后，在真正注入前再核对目标；取消或校验失败时不会下发。 */
+    internal suspend fun guardedGesture(displayId: Int, path: Path, durationMs: Long, finalCheck: () -> Boolean): Boolean =
+        dispatch(displayId, listOf(GestureDescription.StrokeDescription(path, 0, durationMs.coerceAtLeast(1))), finalCheck)
+
     /** 在同一点上连点 [count] 下(一次手势里先后几笔):每下按住 [holdMs],两下之间隔 [gapMs]。 */
     suspend fun taps(displayId: Int, x: Float, y: Float, count: Int, holdMs: Long, gapMs: Long): Boolean {
         val at = Path().apply { moveTo(x, y) }
         return dispatch(displayId, (0 until count).map { i -> GestureDescription.StrokeDescription(at, i * (holdMs + gapMs), holdMs.coerceAtLeast(1)) })
     }
 
-    private suspend fun dispatch(displayId: Int, strokes: List<GestureDescription.StrokeDescription>): Boolean {
+    private suspend fun dispatch(displayId: Int, strokes: List<GestureDescription.StrokeDescription>, finalCheck: (() -> Boolean)? = null): Boolean {
+        // gate 等待平台回调时会进入 NonCancellable，必须保留调用方的原 Job 才能识别停止。
+        val callerJob = currentCoroutineContext()[Job]
         val service = instance.value ?: return false
+        if (finalCheck != null && service !== this) return false
         val manager = service.getSystemService(android.hardware.display.DisplayManager::class.java)
         val targetRemoved = java.util.concurrent.atomic.AtomicBoolean(false)
         val listener = object : android.hardware.display.DisplayManager.DisplayListener {
@@ -148,7 +172,16 @@ open class ScreenAccessibility : AccessibilityService() {
                     if (cont.isActive) cont.resume(false)
                 }
             }
-            if (!service.dispatchGesture(gesture, callback, null)) {
+            val permitted = try {
+                finalCheck == null || (cont.isActive && callerJob?.isActive != false &&
+                    instance.value === service && finalCheck() && callerJob?.isActive != false)
+            } catch (error: Throwable) {
+                // 校验尚未通过、没有注入时也结算 gate，不能留下「等待手势结束」的假状态。
+                finished()
+                if (cont.isActive) cont.resumeWithException(error)
+                return@suspendCancellableCoroutine
+            }
+            if (!permitted || !service.dispatchGesture(gesture, callback, null)) {
                 finished()
                 if (cont.isActive) cont.resume(false)
             }
@@ -191,21 +224,42 @@ open class ScreenAccessibility : AccessibilityService() {
         return screenshotOnce()
     }
 
-    private suspend fun screenshotOnce(): MainShot = suspendCancellableCoroutine { cont ->
+    /** Android 14 起只截指定窗口，避免无障碍浮层遮挡；安全窗口错误不回退到整屏截图。 */
+    internal suspend fun takeWindowScreenshot(windowId: Int): MainShot {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE || windowId < 0) {
+            return MainShot.Failed(ERROR_TAKE_SCREENSHOT_INVALID_WINDOW)
+        }
+        val first = screenshotOnce(windowId)
+        if (first !is MainShot.Failed || first.code != ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT) return first
+        kotlinx.coroutines.delay(SCREENSHOT_INTERVAL_MS)
+        return screenshotOnce(windowId)
+    }
+
+    private suspend fun screenshotOnce(windowId: Int? = null): MainShot = suspendCancellableCoroutine { cont ->
         val service = instance.value
-        if (service == null) {
+        if (service == null || windowId != null && service !== this) {
             cont.resume(MainShot.Failed(ERROR_TAKE_SCREENSHOT_NO_ACCESSIBILITY_ACCESS))
             return@suspendCancellableCoroutine
         }
-        service.takeScreenshot(Display.DEFAULT_DISPLAY, service.mainExecutor, object : TakeScreenshotCallback {
+        if (!cont.isActive) return@suspendCancellableCoroutine
+        val callback = object : TakeScreenshotCallback {
             override fun onSuccess(result: ScreenshotResult) {
+                if (!cont.isActive) {
+                    result.hardwareBuffer.close()
+                    return
+                }
                 val shot = runCatching {
                     result.hardwareBuffer.use { buffer ->
                         val hw = Bitmap.wrapHardwareBuffer(buffer, result.colorSpace) ?: return@runCatching null
-                        hw.copy(Bitmap.Config.ARGB_8888, false).also { hw.recycle() }
+                        try { hw.copy(Bitmap.Config.ARGB_8888, false) } finally { hw.recycle() }
                     }
                 }.getOrNull()
-                if (cont.isActive) cont.resume(shot?.let(MainShot::Ok) ?: MainShot.Failed(ERROR_TAKE_SCREENSHOT_INTERNAL_ERROR))
+                val value = if (windowId != null && instance.value !== service) {
+                    shot?.recycle()
+                    MainShot.Failed(ERROR_TAKE_SCREENSHOT_NO_ACCESSIBILITY_ACCESS)
+                } else shot?.let(MainShot::Ok) ?: MainShot.Failed(ERROR_TAKE_SCREENSHOT_INTERNAL_ERROR)
+                // 既处理迟到回调，也处理 resume 后调用方尚未领取图片就被取消的竞态。
+                cont.resume(value) { _, discarded, _ -> (discarded as? MainShot.Ok)?.bitmap?.recycle() }
             }
 
             override fun onFailure(errorCode: Int) {
@@ -213,7 +267,12 @@ open class ScreenAccessibility : AccessibilityService() {
                 val secure = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && errorCode == ERROR_TAKE_SCREENSHOT_SECURE_WINDOW
                 if (cont.isActive) cont.resume(if (secure) MainShot.Secure else MainShot.Failed(errorCode))
             }
-        })
+        }
+        if (windowId != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                service.takeScreenshotOfWindow(windowId, service.mainExecutor, callback)
+            } else cont.resume(MainShot.Failed(ERROR_TAKE_SCREENSHOT_INVALID_WINDOW))
+        } else service.takeScreenshot(Display.DEFAULT_DISPLAY, service.mainExecutor, callback)
     }
 
     /**

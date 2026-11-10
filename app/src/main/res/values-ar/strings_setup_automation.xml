@@ -20,4 +20,6 @@
     <string name="setup_auto_model_unavailable">أعد نموذجا رئيسيا واختره من الإعدادات ← النماذج. تظل القواعد التلقائية والإعداد اليدوي متاحين.</string>
     <string name="setup_auto_model_thinking">يحدد النموذج الحالي خطوة الإعداد التالية…</string>
     <string name="setup_auto_model_failed">لم يتمكن النموذج من تحديد خطوة تالية مناسبة. ارجع إلى Mika للمتابعة يدويا أو أعد المحاولة.</string>
+    <string name="setup_auto_usb_visual_info">إذا تعذّرت قراءة عناصر التحكم، فستحاول Mika التعرّف على شاشة تصحيح أخطاء USB محلياً على الجهاز. لا يتم رفع لقطات الشاشة. ما زال عليك تأكيد رسائل النظام بنفسك.</string>
+    <string name="setup_auto_usb_visual">جارٍ التعرّف على الشاشة…</string>
 </resources>

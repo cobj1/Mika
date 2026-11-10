@@ -20,4 +20,6 @@
     <string name="setup_auto_model_unavailable">Konfigurasikan dan pilih model utama di Pengaturan → Model. Aturan otomatis dan pengaturan manual tetap tersedia.</string>
     <string name="setup_auto_model_thinking">Model saat ini sedang menentukan langkah pengaturan berikutnya…</string>
     <string name="setup_auto_model_failed">Model tidak dapat menentukan langkah berikutnya yang sesuai. Kembali ke Mika untuk melanjutkan secara manual atau coba lagi.</string>
+    <string name="setup_auto_usb_visual_info">Jika kontrol tidak dapat dibaca, Mika akan mencoba mengenali layar debugging USB di perangkat. Screenshot tidak diunggah. Anda tetap harus menyetujui konfirmasi sistem sendiri.</string>
+    <string name="setup_auto_usb_visual">Mengenali layar…</string>
 </resources>

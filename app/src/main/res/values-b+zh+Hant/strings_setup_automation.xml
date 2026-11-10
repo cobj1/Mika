@@ -20,4 +20,6 @@
     <string name="setup_auto_model_unavailable">請先在「設定 → 模型」設定並選用主模型。目前仍可使用固定規則自動設定，或手動完成。</string>
     <string name="setup_auto_model_thinking">正在使用目前模型判斷下一步設定…</string>
     <string name="setup_auto_model_failed">模型未能確定合適的下一步。請返回 Mika 手動繼續，或重新嘗試。</string>
+    <string name="setup_auto_usb_visual_info">無法讀取控制項時，會嘗試在本機辨識 USB 偵錯頁面的螢幕截圖；截圖不會上傳。系統確認仍需你完成。</string>
+    <string name="setup_auto_usb_visual">正在辨識畫面…</string>
 </resources>

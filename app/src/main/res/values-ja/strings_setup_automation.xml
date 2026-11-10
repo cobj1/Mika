@@ -20,4 +20,6 @@
     <string name="setup_auto_model_unavailable">「設定 → モデル」でメインモデルを設定して選択してください。固定ルールによる自動設定と手動設定は引き続き利用できます。</string>
     <string name="setup_auto_model_thinking">現在のモデルで次の設定手順を確認しています…</string>
     <string name="setup_auto_model_failed">モデルが適切な次の手順を特定できませんでした。Mika に戻って手動で続けるか、再試行してください。</string>
+    <string name="setup_auto_usb_visual_info">操作部品を読み取れない場合は、USB デバッグ画面のスクリーンショットを端末内で認識します。画像はアップロードしません。システムの確認は引き続き手動で行ってください。</string>
+    <string name="setup_auto_usb_visual">画面を認識しています…</string>
 </resources>

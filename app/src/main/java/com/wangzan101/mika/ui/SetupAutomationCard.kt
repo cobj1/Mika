@@ -47,6 +47,11 @@ internal fun SetupAutomationCard(
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(stringResource(R.string.setup_auto_title), style = MikaType.Body, fontWeight = FontWeight.SemiBold, color = c.ink)
                 Text(stringResource(R.string.setup_auto_intro), fontSize = 14.sp, lineHeight = 22.sp, color = c.ink2)
+                Text(
+                    stringResource(R.string.setup_auto_usb_visual_info),
+                    Modifier.testTag("setup-automation-usb-visual-info"),
+                    fontSize = 13.sp, lineHeight = 20.sp, color = c.ink2,
+                )
                 if (onUseModelChange != null) {
                     val modelTitle = stringResource(R.string.setup_auto_model_title)
                     Row(

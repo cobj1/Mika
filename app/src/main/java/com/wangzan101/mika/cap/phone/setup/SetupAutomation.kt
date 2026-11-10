@@ -227,7 +227,10 @@ class SetupAutomation(
         val target = if (wireless) SetupTarget.Wireless else SetupTarget.Usb
         fun enabled() = if (wireless) DeveloperSettings.wirelessDebugging(app.contentResolver) else DeveloperSettings.usbDebugging(app.contentResolver)
         update(message)
-        if (!open(if (wireless) DeveloperSettings.wirelessDebuggingPage() else DeveloperSettings.usbDebuggingPage())) return false
+        val debuggingIntents = if (wireless) DeveloperSettings.wirelessDebuggingPage() else
+            DeveloperSettings.usbDebuggingPage().map { Intent(it).setPackage(settingsPackage ?: return false) }
+        if (!open(debuggingIntents)) return false
+        val usbLease = if (!wireless) settingsPackage?.let { SetupAutomationWindowLease(it, SystemClock.uptimeMillis()) } else null
         delay(PAGE_SETTLE_MS)
         var clicked = false
         var opened = false
@@ -237,10 +240,44 @@ class SetupAutomation(
         val deadline = SystemClock.elapsedRealtime() + STEP_MS
         while (SystemClock.elapsedRealtime() < deadline) {
             val on = enabled()
-            val page = page(message)
+            val page = try { page(message) } catch (unavailable: SettingsPageUnavailable) {
+                if (wireless) throw unavailable
+                val service = ScreenAccessibility.instance.value ?: throw unavailable
+                val lease = usbLease ?: throw unavailable
+                if (!on) stableOn = 0
+                if (on) {
+                    val captureOverlay = overlay
+                    stableOn = if (SetupUsbScreenshot.developerPageVisible(service, lease, captureOverlay) && enabled()) stableOn + 1 else 0
+                    if (stableOn >= 3) return true
+                } else if (!clicked) {
+                    update(R.string.setup_auto_usb_visual)
+                    if (!showOverlay(service)) throw unavailable
+                    delay(POLL_MS) // 等停止浮层加入窗口列表，随后才记录截图的窗口代次。
+                    val captureOverlay = overlay
+                    when (SetupUsbScreenshot.act(service, lease, scrolls < MAX_SCROLLS, captureOverlay)) {
+                        SetupUsbScreenshot.Result.Tapped -> { clicked = true; update(R.string.setup_auto_confirm) }
+                        SetupUsbScreenshot.Result.Scrolled -> scrolls++
+                        SetupUsbScreenshot.Result.Retry -> Unit
+                        SetupUsbScreenshot.Result.Unavailable -> throw unavailable
+                        SetupUsbScreenshot.Result.ActionUncertain -> return false
+                    }.also { Log.d(TAG, "usb screenshot action finished clicked=$clicked scrolls=$scrolls") }
+                    hideOverlay()
+                } else {
+                    // 已点一次，仅等待用户完成系统确认；不得把同一个开关再次关掉。
+                    update(R.string.setup_auto_confirm)
+                }
+                pageAvailability.reset()
+                delay(POLL_MS)
+                continue
+            }
             // 某些系统先把无线调试写成 1，再弹网络确认框、拒绝后拨回 0。
             // 必须开关连续稳定且当前没有确认框，才跳到下一页。
-            stableOn = if (on && page != null) stableOn + 1 else 0
+            stableOn = when {
+                !on -> 0
+                page != null -> stableOn + 1
+                !wireless -> stableOn // USB 截图回退会在核实正常列表后计数，等待根节点时保留该证据。
+                else -> 0
+            }
             page?.use {
                 if (stableOn >= 3) return true
                 if (!on && !clicked) {
@@ -258,6 +295,26 @@ class SetupAutomation(
                             SetupActionResult.Failed -> return false
                         }
                         else -> {
+                            // 部分 ROM 只隐藏敏感的 USB 行，根节点和其余列表仍可读。
+                            // 在继续滚动前看一眼画面，避免把已经可见的 USB 行反复滚过去。
+                            if (!wireless) {
+                                val service = ScreenAccessibility.instance.value
+                                val lease = usbLease
+                                if (service != null && lease != null) {
+                                    update(R.string.setup_auto_usb_visual)
+                                    val captureOverlay = overlay
+                                    val visual = SetupUsbScreenshot.act(service, lease, scrolls < MAX_SCROLLS, captureOverlay)
+                                    Log.d(TAG, "usb screenshot result=$visual")
+                                    update(message)
+                                    when (visual) {
+                                        SetupUsbScreenshot.Result.Tapped -> { clicked = true; update(R.string.setup_auto_confirm); hideOverlay(); return@use }
+                                        SetupUsbScreenshot.Result.Scrolled -> { scrolls++; return@use }
+                                        SetupUsbScreenshot.Result.Retry -> return@use
+                                        SetupUsbScreenshot.Result.Unavailable -> Unit
+                                        SetupUsbScreenshot.Result.ActionUncertain -> return false
+                                    }
+                                }
+                            }
                             val suggested = modelAction(advisor, if (wireless) SetupModelStage.Wireless else SetupModelStage.Usb,
                                 it, message, canScroll = scrolls < MAX_SCROLLS, canNavigate = navigations < MAX_NAVIGATIONS, deadline = deadline)
                             if (suggested != null) {
@@ -407,18 +464,23 @@ class SetupAutomation(
         }
         update(message)
         if (overlay == null || overlayService !== service) {
-            hideOverlay()
-            overlayService = service
-            overlay = service.overlays().open(OverlayPlacement(Gravity.BOTTOM or Gravity.END, y = 120)) {
-                val current by state.collectAsState()
-                SetupAutomationOverlay(current, ::stop)
-            }
             // 显示停止按钮失败时，不开始无人可停止的点击。
-            if (overlay == null) { page.close(); throw IllegalStateException("setup overlay unavailable") }
+            if (!showOverlay(service)) { page.close(); throw IllegalStateException("setup overlay unavailable") }
             page.close()
             return null // 浮层加入会改变窗口代次；下一轮重新取节点再操作。
         }
         return page
+    }
+
+    private fun showOverlay(service: ScreenAccessibility): Boolean {
+        if (overlay != null && overlayService === service) return true
+        hideOverlay()
+        overlayService = service
+        overlay = service.overlays().open(OverlayPlacement(Gravity.BOTTOM or Gravity.END, y = 120)) {
+            val current by state.collectAsState()
+            SetupAutomationOverlay(current, ::stop)
+        }
+        return overlay != null
     }
 
     private fun hideOverlay() {
