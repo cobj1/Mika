@@ -5,10 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
 import android.provider.Settings
+import android.util.Log
 import android.view.Display
 import android.view.Gravity
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
+import android.widget.Toast
 import com.wangzan101.mika.R
 import com.wangzan101.mika.cap.phone.a11y.OverlayPlacement
 import com.wangzan101.mika.cap.phone.a11y.OverlayWindow
@@ -52,21 +54,31 @@ class SetupAutomation(
     private var overlayService: ScreenAccessibility? = null
     private var ownsPairing = false
     private var session = 0L
+    private val pageAvailability = SetupAutomationAvailability()
     private val settingsPackage by lazy { SystemPickers.settingsPackage(app.packageManager) }
 
     fun start() {
         if (job?.isActive == true) return
         val currentSession = ++session
+        pageAvailability.reset()
+        Log.i(TAG, "session started")
         update(R.string.setup_auto_enable_accessibility)
         job = scope.launch {
             var completed = false
             try {
                 completed = withTimeoutOrNull(SESSION_MS) { runSetup() } == true
+                Log.i(TAG, "session result=${if (completed) "completed" else "manual"}")
                 mutableState.value = SetupAutomationState(message = if (completed) R.string.setup_auto_done else R.string.setup_auto_manual)
             } catch (cancelled: CancellationException) {
                 throw cancelled
-            } catch (_: Exception) {
+            } catch (_: SettingsPageUnavailable) {
+                Log.i(TAG, "session result=manual reason=PageUnavailable")
+                mutableState.value = SetupAutomationState(message = R.string.setup_auto_page_unavailable)
+                Toast.makeText(app, R.string.setup_auto_page_unavailable, Toast.LENGTH_LONG).show()
+            } catch (error: Exception) {
                 // 设置树、系统页可能被厂商限制；停止并交回手动流程，不盲点或反复尝试。
+                // 异常只记录类型，不记录可能包含页面文字或授权信息的 message/stack trace。
+                Log.w(TAG, "session failed category=${error.javaClass.simpleName}")
                 mutableState.value = SetupAutomationState(message = R.string.setup_auto_manual)
             } finally {
                 // 停止后可以立即重试；旧协程的清理不能拆掉新会话的浮层或配对观察。
@@ -81,6 +93,7 @@ class SetupAutomation(
 
     fun stop() {
         if (job?.isActive != true) return
+        Log.i(TAG, "session stopped")
         session++
         job?.cancel()
         job = null
@@ -128,12 +141,23 @@ class SetupAutomation(
                 val build = it.tree.click(SetupTarget.BuildNumber)
                 val software = if (!softwareOpened) it.tree.click(SetupTarget.SoftwareInfo) else null
                 when {
-                    build != null && taps < 7 -> { if (!it.click(build)) return false; taps++ }
-                    software != null && taps == 0 -> { if (!it.click(software)) return false; softwareOpened = true; scrolls = 0 }
+                    build != null && taps < 7 -> when (it.click(build)) {
+                        SetupActionResult.Applied -> taps++
+                        SetupActionResult.Retry -> Unit
+                        SetupActionResult.Failed -> return false
+                    }
+                    software != null && taps == 0 -> when (it.click(software)) {
+                        SetupActionResult.Applied -> { softwareOpened = true; scrolls = 0 }
+                        SetupActionResult.Retry -> Unit
+                        SetupActionResult.Failed -> return false
+                    }
                     build == null && taps == 0 && scrolls < MAX_SCROLLS -> {
                         val scroll = it.tree.scroll() ?: return false
-                        if (!it.scroll(scroll)) return false
-                        scrolls++
+                        when (it.scroll(scroll)) {
+                            SetupActionResult.Applied -> scrolls++
+                            SetupActionResult.Retry -> Unit
+                            SetupActionResult.Failed -> return false
+                        }
                     }
                 }
             }
@@ -166,12 +190,23 @@ class SetupAutomation(
                     val toggle = it.tree.turnOn(target) ?: if (wireless) it.tree.wirelessPageSwitch() else null
                     val navigation = if (wireless && !opened) it.tree.click(target) else null
                     when {
-                        toggle != null -> { if (!it.click(toggle)) return false; clicked = true }
-                        navigation != null -> { if (!it.click(navigation)) return false; opened = true; scrolls = 0 }
+                        toggle != null -> when (it.click(toggle)) {
+                            SetupActionResult.Applied -> clicked = true
+                            SetupActionResult.Retry -> Unit
+                            SetupActionResult.Failed -> return false
+                        }
+                        navigation != null -> when (it.click(navigation)) {
+                            SetupActionResult.Applied -> { opened = true; scrolls = 0 }
+                            SetupActionResult.Retry -> Unit
+                            SetupActionResult.Failed -> return false
+                        }
                         it.tree.label(target) == null && scrolls < MAX_SCROLLS -> {
                             val scroll = it.tree.scroll() ?: return false
-                            if (!it.scroll(scroll)) return false
-                            scrolls++
+                            when (it.scroll(scroll)) {
+                                SetupActionResult.Applied -> scrolls++
+                                SetupActionResult.Retry -> Unit
+                                SetupActionResult.Failed -> return false
+                            }
                         }
                     }
                 }
@@ -205,12 +240,23 @@ class SetupAutomation(
                     val pair = it.tree.click(SetupTarget.Pair)
                     val wireless = if (!opened) it.tree.click(SetupTarget.Wireless) else null
                     when {
-                        pair != null -> { if (!it.click(pair)) return false; requested = true }
-                        wireless != null -> { if (!it.click(wireless)) return false; opened = true; scrolls = 0 }
+                        pair != null -> when (it.click(pair)) {
+                            SetupActionResult.Applied -> requested = true
+                            SetupActionResult.Retry -> Unit
+                            SetupActionResult.Failed -> return false
+                        }
+                        wireless != null -> when (it.click(wireless)) {
+                            SetupActionResult.Applied -> { opened = true; scrolls = 0 }
+                            SetupActionResult.Retry -> Unit
+                            SetupActionResult.Failed -> return false
+                        }
                         scrolls < MAX_SCROLLS -> {
                             val scroll = it.tree.scroll() ?: return false
-                            if (!it.scroll(scroll)) return false
-                            scrolls++
+                            when (it.scroll(scroll)) {
+                                SetupActionResult.Applied -> scrolls++
+                                SetupActionResult.Retry -> Unit
+                                SetupActionResult.Failed -> return false
+                            }
                         }
                     }
                 }
@@ -221,7 +267,10 @@ class SetupAutomation(
         return false
     }
 
-    private fun update(message: Int) { mutableState.value = SetupAutomationState(active = true, message = message) }
+    private fun update(message: Int) {
+        if (mutableState.value.message != message) Log.i(TAG, "stage=${app.resources.getResourceEntryName(message)}")
+        mutableState.value = SetupAutomationState(active = true, message = message)
+    }
 
     private fun open(intents: List<Intent>): Boolean = intents.any { intent ->
         runCatching {
@@ -235,6 +284,7 @@ class SetupAutomation(
     private fun page(message: Int): SettingsPage? {
         val service = ScreenAccessibility.instance.value
         if (service == null || app.getSystemService(KeyguardManager::class.java).isKeyguardLocked) {
+            pageAvailability.reset()
             hideOverlay()
             update(R.string.setup_auto_confirm)
             return null
@@ -244,16 +294,30 @@ class SetupAutomation(
             it.type != AccessibilityWindowInfo.TYPE_ACCESSIBILITY_OVERLAY &&
                 (it.type == AccessibilityWindowInfo.TYPE_APPLICATION || it.isActive || it.isFocused)
         }.maxByOrNull { it.layer }
-        val root = service.rootInActiveWindow
+        // 从刚确认的主屏最上层窗口取根，保持窗口选择与节点来源一致。
+        val root = top?.takeIf { it.isActive || it.isFocused }?.root
         if (root == null || top == null || root.windowId != top.id || root.packageName?.toString() != settingsPackage) {
+            if (mutableState.value.message != R.string.setup_auto_confirm) {
+                Log.d(TAG, "page paused reason=WindowUnavailable root=${root?.windowId} top=${top?.id}")
+            }
             @Suppress("DEPRECATION")
             root?.recycle()
             hideOverlay()
+            val unreadableAppWindow = top?.takeIf {
+                root == null && it.type == AccessibilityWindowInfo.TYPE_APPLICATION && (it.isActive || it.isFocused)
+            }?.id
+            if (pageAvailability.unreadable(unreadableAppWindow, SystemClock.elapsedRealtime())) {
+                throw SettingsPageUnavailable()
+            }
             update(R.string.setup_auto_confirm)
             return null
         }
+        pageAvailability.reset()
         val page = SettingsPage(service, root)
         if (page.tree.blocked) {
+            if (mutableState.value.message != R.string.setup_auto_confirm) {
+                Log.d(TAG, "page paused reason=Confirmation nodes=${page.tree.nodes.size}")
+            }
             page.close()
             hideOverlay() // 让系统确认框不受浮层遮挡。
             update(R.string.setup_auto_confirm)
@@ -281,6 +345,8 @@ class SetupAutomation(
         overlayService = null
     }
 
+    private class SettingsPageUnavailable : Exception()
+
     private class SettingsPage(private val service: ScreenAccessibility, root: AccessibilityNodeInfo) : AutoCloseable {
         private val windowId = root.windowId
         private val generation = ScreenAccessibility.windowGeneration()
@@ -300,6 +366,8 @@ class SetupAutomation(
                     node.isVisibleToUser, node.isEnabled, node.isClickable, node.isCheckable, node.isChecked,
                     node.isEditable, node.isPassword, node.isScrollable,
                     node.className?.toString()?.endsWith("Dialog") == true,
+                    contentDescription = if (node.isPassword || node.isEditable) "" else node.contentDescription?.toString().orEmpty(),
+                    focused = node.isFocused,
                 )
                 if (raw.size + queue.size + node.childCount <= MAX_NODES) {
                     for (i in 0 until node.childCount) node.getChild(i)?.let { queue.add(it to id) }
@@ -314,15 +382,30 @@ class SetupAutomation(
         fun click(id: Int) = action(id, AccessibilityNodeInfo.ACTION_CLICK)
         fun scroll(id: Int) = action(id, AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
 
-        private fun action(id: Int, action: Int): Boolean {
-            if (generation != ScreenAccessibility.windowGeneration() || ScreenAccessibility.instance.value !== service) return false
-            val active = service.rootInActiveWindow ?: return false
+        private fun action(id: Int, action: Int): SetupActionResult {
+            val kind = if (action == AccessibilityNodeInfo.ACTION_CLICK) "click" else "scroll"
+            if (generation != ScreenAccessibility.windowGeneration() || ScreenAccessibility.instance.value !== service) {
+                Log.d(TAG, "action=$kind result=Retry reason=WindowChanged")
+                return SetupActionResult.Retry
+            }
+            val active = service.windowsOn(Display.DEFAULT_DISPLAY)
+                .firstOrNull { it.id == windowId && (it.isActive || it.isFocused) }?.root ?: run {
+                Log.d(TAG, "action=$kind result=Retry reason=WindowUnavailable")
+                return SetupActionResult.Retry
+            }
             val sameWindow = active.windowId == windowId
             // RecyclerView 可在同一窗口里复用节点；重新取整棵树比对后，用新节点下发，
             // 避免 refresh 把原来的开关变成另一行再误点。不会保留上一轮的节点定位。
             SettingsPage(service, active).use { fresh ->
-                if (!sameWindow || fresh.tree.blocked || fresh.tree.nodes != tree.nodes) return false
-                return fresh.raw.getOrNull(id)?.performAction(action) == true
+                val stableWindow = sameWindow && generation == ScreenAccessibility.windowGeneration() &&
+                    ScreenAccessibility.instance.value === service
+                val result = SetupAutomationAction.apply(tree, fresh.tree, stableWindow) {
+                    fresh.raw.getOrNull(id)?.performAction(action) == true
+                }
+                val reason = SetupAutomationAction.retryReason(tree, fresh.tree, stableWindow)?.name
+                    ?: if (result == SetupActionResult.Failed) "ActionRejected" else "Accepted"
+                Log.d(TAG, "action=$kind result=$result reason=$reason")
+                return result
             }
         }
 
@@ -331,6 +414,7 @@ class SetupAutomation(
     }
 
     private companion object {
+        const val TAG = "MikaSetup"
         const val POLL_MS = 700L
         const val PAGE_SETTLE_MS = 1_000L
         const val STEP_MS = 90_000L

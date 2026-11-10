@@ -3,7 +3,7 @@
     <string name="setup_auto_title">Penyiapan otomatis</string>
     <string name="setup_auto_start">Mulai penyiapan otomatis</string>
     <string name="setup_auto_stop">Hentikan</string>
-    <string name="setup_auto_intro">Pertama, aktifkan layanan aksesibilitas Mika secara manual. Mika kemudian akan mengaktifkan opsi developer, debugging USB, dan debugging nirkabel, lalu menyandingkan ponsel. Masukkan sandi layar kunci dan setujui konfirmasi sistem secara manual.</string>
+    <string name="setup_auto_intro">Pertama, aktifkan layanan aksesibilitas Mika secara manual. Mika akan mencoba mengaktifkan opsi developer, debugging USB, dan debugging nirkabel, lalu menyandingkan ponsel. Jika sistem membatasi tindakan otomatis, Mika akan meminta Anda menyelesaikan langkah terkait secara manual. Masukkan sandi layar kunci dan setujui konfirmasi sistem secara manual.</string>
     <string name="setup_auto_enable_accessibility">Aktifkan layanan aksesibilitas Mika secara manual di Setelan. Penyiapan akan berlanjut otomatis setelah layanan terhubung.</string>
     <string name="setup_auto_developer">Mengaktifkan opsi developer…</string>
     <string name="setup_auto_usb">Mengaktifkan debugging USB…</string>
@@ -11,6 +11,7 @@
     <string name="setup_auto_pairing">Membuka jendela penyandingan. Mika akan membaca kode dan menyandingkan secara otomatis.</string>
     <string name="setup_auto_confirm">Selesaikan konfirmasi atau verifikasi identitas di layar sistem. Setelah itu, penyiapan akan berlanjut otomatis.</string>
     <string name="setup_auto_manual">Penyiapan otomatis dijeda. Kembali ke Mika untuk menyelesaikan langkah secara manual, atau coba lagi.</string>
+    <string name="setup_auto_page_unavailable">Sistem mencegah Mika membaca halaman setelan ini, sehingga penyiapan otomatis dijeda. Kembali ke Mika, selesaikan langkah saat ini di bawah secara manual, lalu ketuk “Mulai penyiapan otomatis”. Langkah yang sudah selesai akan dilewati.</string>
     <string name="setup_auto_stopped">Penyiapan otomatis dihentikan. Anda dapat melanjutkan secara manual atau memulai lagi.</string>
     <string name="setup_auto_done">Penyiapan kontrol ponsel selesai.</string>
 </resources>

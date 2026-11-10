@@ -3,7 +3,7 @@
     <string name="setup_auto_title">자동 설정</string>
     <string name="setup_auto_start">자동 설정 시작</string>
     <string name="setup_auto_stop">중지</string>
-    <string name="setup_auto_intro">먼저 Mika 접근성 서비스를 직접 켜세요. 그러면 Mika가 개발자 옵션, USB 디버깅, 무선 디버깅을 켜고 페어링합니다. 화면 잠금 비밀번호 입력과 시스템 확인은 직접 진행해야 합니다.</string>
+    <string name="setup_auto_intro">먼저 Mika 접근성 서비스를 직접 켜세요. Mika가 개발자 옵션, USB 디버깅, 무선 디버깅 활성화와 페어링을 시도합니다. 시스템이 자동 조작을 제한하면 해당 단계를 직접 완료하도록 안내합니다. 화면 잠금 비밀번호 입력과 시스템 확인은 직접 진행해야 합니다.</string>
     <string name="setup_auto_enable_accessibility">시스템 설정에서 Mika 접근성 서비스를 직접 켜세요. 서비스가 연결되면 설정이 자동으로 계속됩니다.</string>
     <string name="setup_auto_developer">개발자 옵션을 켜는 중…</string>
     <string name="setup_auto_usb">USB 디버깅을 켜는 중…</string>
@@ -11,6 +11,7 @@
     <string name="setup_auto_pairing">페어링 창을 여는 중입니다. Mika가 코드를 읽고 자동으로 페어링합니다.</string>
     <string name="setup_auto_confirm">시스템 화면에서 확인 또는 본인 인증을 완료하세요. 완료 후 자동으로 계속됩니다.</string>
     <string name="setup_auto_manual">자동 설정이 일시 중지되었습니다. Mika로 돌아가 단계를 직접 완료하거나 다시 시도하세요.</string>
+    <string name="setup_auto_page_unavailable">시스템이 이 설정 페이지를 Mika가 읽지 못하게 제한하여 자동 설정이 일시 중지되었습니다. Mika로 돌아가 아래의 현재 단계를 직접 완료한 뒤 “자동 설정 시작”을 누르세요. 완료한 단계는 건너뜁니다.</string>
     <string name="setup_auto_stopped">자동 설정이 중지되었습니다. 직접 계속하거나 다시 시작할 수 있습니다.</string>
     <string name="setup_auto_done">휴대전화 조작 설정이 완료되었습니다.</string>
 </resources>

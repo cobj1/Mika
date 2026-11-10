@@ -3,7 +3,7 @@
     <string name="setup_auto_title">Configuración automática</string>
     <string name="setup_auto_start">Iniciar configuración automática</string>
     <string name="setup_auto_stop">Detener</string>
-    <string name="setup_auto_intro">Primero, activa manualmente el servicio de accesibilidad de Mika. Después, Mika activará las opciones para desarrolladores, la depuración USB y la depuración inalámbrica, y vinculará el teléfono. Debes introducir la contraseña de bloqueo y confirmar los avisos del sistema manualmente.</string>
+    <string name="setup_auto_intro">Primero, activa manualmente el servicio de accesibilidad de Mika. Mika intentará activar las opciones para desarrolladores, la depuración USB y la depuración inalámbrica, y vincular el teléfono. Si el sistema limita las acciones automáticas, Mika te pedirá que completes los pasos afectados manualmente. Debes introducir la contraseña de bloqueo y confirmar los avisos del sistema manualmente.</string>
     <string name="setup_auto_enable_accessibility">Activa manualmente el servicio de accesibilidad de Mika en Ajustes. La configuración continuará automáticamente cuando se conecte.</string>
     <string name="setup_auto_developer">Activando las opciones para desarrolladores…</string>
     <string name="setup_auto_usb">Activando la depuración USB…</string>
@@ -11,6 +11,7 @@
     <string name="setup_auto_pairing">Abriendo la ventana de vinculación. Mika leerá el código y se vinculará automáticamente.</string>
     <string name="setup_auto_confirm">Completa la confirmación o verificación de identidad en la pantalla del sistema. Después, la configuración continuará automáticamente.</string>
     <string name="setup_auto_manual">La configuración automática está en pausa. Vuelve a Mika para completar los pasos manualmente o inténtalo de nuevo.</string>
+    <string name="setup_auto_page_unavailable">El sistema impide que Mika lea esta página de ajustes, por lo que la configuración automática está en pausa. Vuelve a Mika, completa manualmente el paso actual que aparece abajo y pulsa «Iniciar configuración automática». Se omitirán los pasos completados.</string>
     <string name="setup_auto_stopped">Configuración automática detenida. Puedes continuar manualmente o empezar de nuevo.</string>
     <string name="setup_auto_done">La configuración del control del teléfono ha finalizado.</string>
 </resources>

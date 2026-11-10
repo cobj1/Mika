@@ -4,7 +4,7 @@ import java.util.Locale
 
 /** 只匹配设置页面的已知标题；不把说明文字里的「USB 调试」等词当作开关。 */
 internal enum class SetupTarget(val labels: Set<String>) {
-    BuildNumber(setOf("Build number", "版本号", "版本號", "内部版本号", "內部版本號", "版本编号", "版本編號")),
+    BuildNumber(setOf("Build number", "Build 号", "Build 號", "版本号", "版本號", "内部版本号", "內部版本號", "版本编号", "版本編號")),
     SoftwareInfo(setOf("Software information", "软件信息", "軟體資訊", "软件版本", "軟體版本", "详细信息与规格", "詳細資訊與規格")),
     Usb(setOf("USB debugging", "USB 调试", "USB調試", "USB 偵錯", "USB偵錯")),
     Wireless(setOf("Wireless debugging", "无线调试", "無線調試", "無線偵錯")),
@@ -26,22 +26,33 @@ internal data class SetupNode(
     val password: Boolean = false,
     val scrollable: Boolean = false,
     val dialog: Boolean = false,
+    val contentDescription: String = "",
+    val focused: Boolean = false,
 )
 
 /** 遇到身份验证、确认框或歧义时不给动作；调用方只能操作返回的唯一节点。 */
 internal class SetupAutomationTree(val nodes: List<SetupNode>, val trusted: Boolean = true) {
     private val byId = nodes.associateBy { it.id }
     val blocked: Boolean = !trusted || nodes.any {
-        it.visible && (it.password || it.editable || it.dialog || it.resource in DIALOG_BUTTONS ||
-            (it.clickable && normalized(it.text) in CONFIRM_LABELS))
+        it.visible && (it.password || (it.editable && !it.isIdleSearchField()) || it.dialog || it.resource in DIALOG_BUTTONS ||
+            (it.clickable && normalized(it.labelText()) in CONFIRM_LABELS))
     }
 
     private fun normalized(text: String) = text.lowercase(Locale.ROOT).filterNot { it.isWhitespace() }
 
+    // 设置页常驻的未聚焦搜索框不是身份验证；只放行已知 SearchView 输入资源。
+    // 密码、未知输入框和正在输入的搜索框仍阻止动作，避免用户操作时被自动点击打断。
+    private fun SetupNode.isIdleSearchField() = !focused && resource.endsWith(":id/search_src_text")
+
+    private fun SetupNode.labelText() = text.ifBlank { contentDescription }
+
     fun label(target: SetupTarget, requireEnabled: Boolean = true): SetupNode? {
         if (blocked) return null
         val labels = target.labels.map(::normalized).toSet()
-        return nodes.filter { it.visible && (!requireEnabled || it.enabled) && normalized(it.text) in labels }.singleOrNull()
+        return nodes.filter {
+            it.visible && !it.editable && !it.password && (!requireEnabled || it.enabled) &&
+                normalized(it.labelText()) in labels
+        }.singleOrNull()
     }
 
     fun click(target: SetupTarget): Int? = label(target)?.let(::clickable)?.id
@@ -75,8 +86,14 @@ internal class SetupAutomationTree(val nodes: List<SetupNode>, val trusted: Bool
             ?.takeIf { !it.checked && it.clickable }?.id
     }
 
-    fun scroll(): Int? = if (blocked) null else
-        nodes.filter { it.visible && it.enabled && it.scrollable }.singleOrNull()?.id
+    /** 设置页可能用 ScrollView 包住 RecyclerView；同一嵌套链只滚最内层，并列区域仍视作歧义。 */
+    fun scroll(): Int? {
+        if (blocked) return null
+        val candidates = nodes.filter { it.visible && it.enabled && it.scrollable }
+        return candidates.filter { outer ->
+            candidates.none { inner -> inner.id != outer.id && inside(inner, outer) }
+        }.singleOrNull()?.id
+    }
 
     private companion object {
         val DIALOG_BUTTONS = setOf("android:id/button1", "android:id/button2", "android:id/button3")

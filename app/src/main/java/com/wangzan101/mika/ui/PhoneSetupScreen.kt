@@ -150,7 +150,7 @@ fun PhoneSetupScreen(status: SystemStatus, repair: Boolean, onFix: (Fix) -> Unit
     LaunchedEffect(view.phase) { if (view.phase == SetupPhase.Working || view.phase == SetupPhase.Success) revisit = null }
     // 到了配对一步:开始找配对窗口;通知没允许就在这时请求(配对码要填在通知里)。
     // 「配对」通知被关掉要去系统设置里开,不自动跳过去,页面上给按钮
-    LaunchedEffect(view.current) {
+    LaunchedEffect(view.current, automation.active) {
         if (view.current == SetupStep.PairingCode && !phone.setupAutomation.state.value.active) pairing.begin()
     }
     // 停在配对一步时离开引导页,多半是自己切去系统设置打开配对窗口(不一定点「去无线调试」):从这时起再看 10 分钟,

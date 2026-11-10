@@ -3,7 +3,7 @@
     <string name="setup_auto_title">الإعداد التلقائي</string>
     <string name="setup_auto_start">بدء الإعداد التلقائي</string>
     <string name="setup_auto_stop">إيقاف</string>
-    <string name="setup_auto_intro">فعّل أولاً خدمة تسهيل الاستخدام لـ Mika يدوياً. بعد ذلك، ستفعّل Mika خيارات المطوّر وتصحيح أخطاء USB وتصحيح الأخطاء اللاسلكي وتُقرن الهاتف. يجب إدخال كلمة مرور قفل الشاشة وتأكيد رسائل النظام يدوياً.</string>
+    <string name="setup_auto_intro">فعّل أولاً خدمة تسهيل الاستخدام لـ Mika يدوياً. ستحاول Mika تفعيل خيارات المطوّر وتصحيح أخطاء USB وتصحيح الأخطاء اللاسلكي وإقران الهاتف. إذا قيّد النظام الإجراءات التلقائية، فستطلب منك Mika إكمال الخطوات المعنية يدوياً. يجب إدخال كلمة مرور قفل الشاشة وتأكيد رسائل النظام يدوياً.</string>
     <string name="setup_auto_enable_accessibility">فعّل خدمة تسهيل الاستخدام لـ Mika يدوياً في إعدادات النظام. سيستمر الإعداد تلقائياً بعد اتصال الخدمة.</string>
     <string name="setup_auto_developer">جارٍ تفعيل خيارات المطوّر…</string>
     <string name="setup_auto_usb">جارٍ تفعيل تصحيح أخطاء USB…</string>
@@ -11,6 +11,7 @@
     <string name="setup_auto_pairing">جارٍ فتح نافذة الاقتران. ستقرأ Mika الرمز وتُجري الاقتران تلقائياً.</string>
     <string name="setup_auto_confirm">أكمل التأكيد أو التحقق من الهوية في شاشة النظام. سيستمر الإعداد تلقائياً بعد ذلك.</string>
     <string name="setup_auto_manual">توقف الإعداد التلقائي مؤقتاً. ارجع إلى Mika لإكمال الخطوات يدوياً أو حاول مرة أخرى.</string>
+    <string name="setup_auto_page_unavailable">يمنع النظام Mika من قراءة صفحة الإعدادات هذه، لذا توقف الإعداد التلقائي مؤقتاً. ارجع إلى Mika وأكمل الخطوة الحالية أدناه يدوياً، ثم اضغط على «بدء الإعداد التلقائي». سيتم تخطي الخطوات المكتملة.</string>
     <string name="setup_auto_stopped">تم إيقاف الإعداد التلقائي. يمكنك المتابعة يدوياً أو البدء من جديد.</string>
     <string name="setup_auto_done">اكتمل إعداد التحكم في الهاتف.</string>
 </resources>
