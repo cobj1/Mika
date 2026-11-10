@@ -69,6 +69,9 @@ import com.wangzan101.mika.core.shell.SetupStep
 import com.wangzan101.mika.core.shell.SetupView
 import com.wangzan101.mika.core.shell.StepMark
 import com.wangzan101.mika.settings.SystemStatus
+import com.wangzan101.mika.settings.ProviderStore
+import com.wangzan101.mika.core.model.ModelRole
+import com.wangzan101.mika.localmodel.LocalModelCatalog
 import com.wangzan101.mika.cap.phone.PhoneServices
 import com.wangzan101.mika.ui.components.PageBackground
 import com.wangzan101.mika.ui.components.GroupCard
@@ -109,6 +112,11 @@ fun PhoneSetupScreen(status: SystemStatus, repair: Boolean, onFix: (Fix) -> Unit
     val phone = remember { PhoneServices.of(context) }
     val pairing = phone.pairing
     val automation by phone.setupAutomation.state.collectAsState()
+    val providers = remember { ProviderStore.get(context) }
+    val modelRoles by providers.roles.collectAsState()
+    val modelConfigs by providers.configs.collectAsState()
+    val mainModel = remember(modelRoles, modelConfigs) { providers.configFor(ModelRole.Main) }
+    var useModel by rememberSaveable { mutableStateOf(true) }
     val discovery by phone.shellControl.pairingDiscovery.collectAsState()
     val scanning by phone.shellManager.scanningPorts.collectAsState()
     val shell = status.builtinShell
@@ -235,7 +243,14 @@ fun PhoneSetupScreen(status: SystemStatus, repair: Boolean, onFix: (Fix) -> Unit
         onCopyUsbCommand = { phone.setupAutomation.stop(); copyUsbCommand() },
         automationContent = if (view.phase == SetupPhase.Guide || view.phase == SetupPhase.Failed ||
             (view.phase == SetupPhase.Working && automation.active)) {
-            { SetupAutomationCard(automation, phone.setupAutomation::start, phone.setupAutomation::stop) }
+            {
+                SetupAutomationCard(
+                    automation, { phone.setupAutomation.start(useModel && mainModel != null) }, phone.setupAutomation::stop,
+                    useModel = useModel, onUseModelChange = { useModel = it },
+                    modelAvailable = mainModel != null, modelIsLocal = mainModel?.baseUrl == LocalModelCatalog.BASE_URL,
+                    modelName = mainModel?.model,
+                )
+            }
         } else null,
     )
     // 卡在哪一步都能把诊断信息发给作者:用的是引导页此刻的输入,用户确认过的步骤也在里面

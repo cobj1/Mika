@@ -1,9 +1,19 @@
 package com.wangzan101.mika.ui
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.wangzan101.mika.R
 import com.wangzan101.mika.cap.phone.setup.SetupAutomationState
@@ -37,6 +47,69 @@ class SetupAutomationScreenTest {
         compose.onNodeWithTag("setup-automation-status").assertIsDisplayed()
         compose.onNodeWithTag("setup-automation-start").assertDoesNotExist()
         compose.onNodeWithTag("setup-automation-stop").performClick()
+        assertEquals(1, stops)
+    }
+
+    @Test fun onlineModelDisclosureIsVisibleBeforeEnablingAssistance() {
+        var selected: Boolean? = null
+        var starts = 0
+        var disclosure = ""
+        compose.setContent {
+            MikaTheme {
+                disclosure = stringResource(R.string.setup_auto_model_online)
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    SetupAutomationCard(
+                        SetupAutomationState(), { starts++ }, {},
+                        useModel = false, onUseModelChange = { selected = it }, modelAvailable = true,
+                        modelName = "configured-main-model",
+                    )
+                }
+            }
+        }
+        compose.onNodeWithTag("setup-automation-model-info").assertTextEquals(disclosure)
+        compose.onNodeWithTag("setup-automation-model-name").assertTextEquals("configured-main-model")
+        compose.onNodeWithTag("setup-automation-model").assertIsOff().performScrollTo().performClick()
+        assertEquals(true, selected)
+        assertEquals(0, starts)
+    }
+
+    @Test fun missingModelKeepsRulesAvailableAndDisablesAssistance() {
+        var starts = 0
+        var disclosure = ""
+        compose.setContent {
+            MikaTheme {
+                disclosure = stringResource(R.string.setup_auto_model_unavailable)
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    SetupAutomationCard(
+                        SetupAutomationState(), { starts++ }, {},
+                        useModel = true, onUseModelChange = {}, modelAvailable = false,
+                    )
+                }
+            }
+        }
+        compose.onNodeWithTag("setup-automation-model").assertIsOff().assertIsNotEnabled()
+        compose.onNodeWithTag("setup-automation-model-info").assertTextEquals(disclosure)
+        compose.onNodeWithTag("setup-automation-start").performScrollTo().performClick()
+        assertEquals(1, starts)
+    }
+
+    @Test fun runningSessionKeepsModelChoiceLockedAndStopAvailable() {
+        var stops = 0
+        var disclosure = ""
+        compose.setContent {
+            MikaTheme {
+                disclosure = stringResource(R.string.setup_auto_model_local)
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    SetupAutomationCard(
+                        SetupAutomationState(true, R.string.setup_auto_model_thinking), {}, { stops++ },
+                        useModel = true, onUseModelChange = {}, modelAvailable = true, modelIsLocal = true,
+                    )
+                }
+            }
+        }
+        compose.onNodeWithTag("setup-automation-model").assertIsOn().assertIsNotEnabled()
+        compose.onNodeWithTag("setup-automation-model-info").assertTextEquals(disclosure)
+        compose.onNodeWithTag("setup-automation-stop").performScrollTo().performClick()
         assertEquals(1, stops)
     }
 }

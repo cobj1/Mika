@@ -14,4 +14,10 @@
     <string name="setup_auto_page_unavailable">O sistema impede que a Mika leia esta página de configurações, então a configuração automática foi pausada. Volte à Mika, conclua manualmente a etapa atual abaixo e toque em “Iniciar configuração automática”. As etapas concluídas serão ignoradas.</string>
     <string name="setup_auto_stopped">Configuração automática interrompida. Você pode continuar manualmente ou começar de novo.</string>
     <string name="setup_auto_done">A configuração do controle do celular foi concluída.</string>
+    <string name="setup_auto_model_title">Usar o modelo para reconhecer outros menus</string>
+    <string name="setup_auto_model_local">Quando uma configuração não é reconhecida, o modelo principal local interpreta os títulos do menu. O processamento ocorre neste telefone.</string>
+    <string name="setup_auto_model_online">Quando uma configuração não é reconhecida, títulos selecionados do menu são enviados ao modelo principal online configurado. Capturas de tela, detalhes do dispositivo e códigos de pareamento não são enviados.</string>
+    <string name="setup_auto_model_unavailable">Configure e selecione um modelo principal em Configurações → Modelos. As regras automáticas e a configuração manual continuam disponíveis.</string>
+    <string name="setup_auto_model_thinking">O modelo atual está identificando a próxima etapa…</string>
+    <string name="setup_auto_model_failed">O modelo não identificou uma próxima etapa adequada. Volte ao Mika para continuar manualmente ou tente novamente.</string>
 </resources>

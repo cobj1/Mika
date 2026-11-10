@@ -14,4 +14,10 @@
     <string name="setup_auto_page_unavailable">系统限制 Mika 读取此设置页面，自动设置已暂停。请返回 Mika，手动完成下方当前步骤后，再点「开始自动设置」；已完成的步骤会自动跳过。</string>
     <string name="setup_auto_stopped">自动设置已停止，你可以手动继续或重新开始。</string>
     <string name="setup_auto_done">手机操作设置已完成。</string>
+    <string name="setup_auto_model_title">使用模型识别不同的设置菜单</string>
+    <string name="setup_auto_model_local">遇到无法识别的设置时，使用当前手机本地主模型理解菜单标题，处理过程留在本机。</string>
+    <string name="setup_auto_model_online">遇到无法识别的设置时，将筛选后的设置菜单标题发送给你配置的在线主模型；不发送截图、设备详情或配对码。</string>
+    <string name="setup_auto_model_unavailable">请先在「设置 → 模型」配置并选用主模型。当前仍可使用固定规则自动设置，或手动完成。</string>
+    <string name="setup_auto_model_thinking">正在使用当前模型判断下一步设置…</string>
+    <string name="setup_auto_model_failed">模型未能确定合适的下一步。请返回 Mika 手动继续，或重新尝试。</string>
 </resources>

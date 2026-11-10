@@ -14,4 +14,10 @@
     <string name="setup_auto_page_unavailable">システムの制限により、この設定ページを Mika が読み取れないため、自動設定を一時停止しました。Mika に戻り、下に表示されている現在の手順を手動で完了してから「自動設定を開始」を押してください。完了した手順はスキップされます。</string>
     <string name="setup_auto_stopped">自動設定を停止しました。手動で続行するか、最初からやり直せます。</string>
     <string name="setup_auto_done">スマートフォン操作の設定が完了しました。</string>
+    <string name="setup_auto_model_title">モデルで異なる設定メニューを識別</string>
+    <string name="setup_auto_model_local">設定を認識できない場合、現在の端末内メインモデルでメニュー名を理解します。処理はこの端末内で行われます。</string>
+    <string name="setup_auto_model_online">設定を認識できない場合、選別した設定メニュー名を設定済みのオンラインメインモデルへ送信します。画面画像、端末の詳細、ペアリングコードは送信しません。</string>
+    <string name="setup_auto_model_unavailable">「設定 → モデル」でメインモデルを設定して選択してください。固定ルールによる自動設定と手動設定は引き続き利用できます。</string>
+    <string name="setup_auto_model_thinking">現在のモデルで次の設定手順を確認しています…</string>
+    <string name="setup_auto_model_failed">モデルが適切な次の手順を特定できませんでした。Mika に戻って手動で続けるか、再試行してください。</string>
 </resources>

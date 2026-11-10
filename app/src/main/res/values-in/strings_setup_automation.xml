@@ -14,4 +14,10 @@
     <string name="setup_auto_page_unavailable">Sistem mencegah Mika membaca halaman setelan ini, sehingga penyiapan otomatis dijeda. Kembali ke Mika, selesaikan langkah saat ini di bawah secara manual, lalu ketuk “Mulai penyiapan otomatis”. Langkah yang sudah selesai akan dilewati.</string>
     <string name="setup_auto_stopped">Penyiapan otomatis dihentikan. Anda dapat melanjutkan secara manual atau memulai lagi.</string>
     <string name="setup_auto_done">Penyiapan kontrol ponsel selesai.</string>
+    <string name="setup_auto_model_title">Bantuan model untuk menu yang berbeda</string>
+    <string name="setup_auto_model_local">Jika pengaturan tidak dikenali, model utama di perangkat akan memahami judul menu. Pemrosesan tetap dilakukan di ponsel ini.</string>
+    <string name="setup_auto_model_online">Jika pengaturan tidak dikenali, judul menu pengaturan yang dipilih dikirim ke model utama online yang telah dikonfigurasi. Tangkapan layar, detail perangkat, dan kode penyambungan tidak dikirim.</string>
+    <string name="setup_auto_model_unavailable">Konfigurasikan dan pilih model utama di Pengaturan → Model. Aturan otomatis dan pengaturan manual tetap tersedia.</string>
+    <string name="setup_auto_model_thinking">Model saat ini sedang menentukan langkah pengaturan berikutnya…</string>
+    <string name="setup_auto_model_failed">Model tidak dapat menentukan langkah berikutnya yang sesuai. Kembali ke Mika untuk melanjutkan secara manual atau coba lagi.</string>
 </resources>

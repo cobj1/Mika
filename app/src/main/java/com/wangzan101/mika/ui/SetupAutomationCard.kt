@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,18 +25,59 @@ import com.wangzan101.mika.cap.phone.setup.SetupAutomationState
 import com.wangzan101.mika.ui.components.ButtonKind
 import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.MikaButton
+import com.wangzan101.mika.ui.components.MikaSwitch
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 
 /** 自动设置是可选入口；手动清单继续保留，随时可以停止接手。 */
 @Composable
-internal fun SetupAutomationCard(state: SetupAutomationState, onStart: () -> Unit, onStop: () -> Unit) {
+internal fun SetupAutomationCard(
+    state: SetupAutomationState,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+    useModel: Boolean = false,
+    onUseModelChange: ((Boolean) -> Unit)? = null,
+    modelAvailable: Boolean = false,
+    modelIsLocal: Boolean = false,
+    modelName: String? = null,
+) {
     val c = MikaTheme.colors
     Column(Modifier.padding(bottom = 16.dp).testTag("setup-automation")) {
         GroupCard {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(stringResource(R.string.setup_auto_title), style = MikaType.Body, fontWeight = FontWeight.SemiBold, color = c.ink)
                 Text(stringResource(R.string.setup_auto_intro), fontSize = 14.sp, lineHeight = 22.sp, color = c.ink2)
+                if (onUseModelChange != null) {
+                    val modelTitle = stringResource(R.string.setup_auto_model_title)
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Text(
+                            modelTitle, Modifier.weight(1f),
+                            fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = c.ink,
+                        )
+                        MikaSwitch(
+                            checked = useModel && modelAvailable,
+                            onCheckedChange = onUseModelChange,
+                            modifier = Modifier.testTag("setup-automation-model").semantics { contentDescription = modelTitle },
+                            enabled = modelAvailable && !state.active,
+                        )
+                    }
+                    if (modelAvailable && !modelName.isNullOrBlank()) {
+                        Text(modelName, Modifier.testTag("setup-automation-model-name"), fontSize = 13.sp, color = c.ink)
+                    }
+                    Text(
+                        stringResource(when {
+                            !modelAvailable -> R.string.setup_auto_model_unavailable
+                            modelIsLocal -> R.string.setup_auto_model_local
+                            else -> R.string.setup_auto_model_online
+                        }),
+                        Modifier.testTag("setup-automation-model-info"),
+                        fontSize = 13.sp, lineHeight = 20.sp, color = c.ink2,
+                    )
+                }
                 if (state.message != R.string.setup_auto_intro) {
                     Text(stringResource(state.message), Modifier.testTag("setup-automation-status"), fontSize = 14.sp, lineHeight = 22.sp, color = c.ink)
                 }

@@ -14,4 +14,10 @@
     <string name="setup_auto_page_unavailable">El sistema impide que Mika lea esta página de ajustes, por lo que la configuración automática está en pausa. Vuelve a Mika, completa manualmente el paso actual que aparece abajo y pulsa «Iniciar configuración automática». Se omitirán los pasos completados.</string>
     <string name="setup_auto_stopped">Configuración automática detenida. Puedes continuar manualmente o empezar de nuevo.</string>
     <string name="setup_auto_done">La configuración del control del teléfono ha finalizado.</string>
+    <string name="setup_auto_model_title">Usar el modelo para reconocer otros menús</string>
+    <string name="setup_auto_model_local">Si no se reconoce un ajuste, el modelo principal local interpreta los títulos del menú. El procesamiento se realiza en este teléfono.</string>
+    <string name="setup_auto_model_online">Si no se reconoce un ajuste, se envían títulos seleccionados del menú de ajustes al modelo principal en línea configurado. No se envían capturas, datos del dispositivo ni códigos de vinculación.</string>
+    <string name="setup_auto_model_unavailable">Configura y selecciona un modelo principal en Ajustes → Modelos. Puedes seguir usando las reglas automáticas o completar la configuración manualmente.</string>
+    <string name="setup_auto_model_thinking">El modelo actual está identificando el siguiente paso…</string>
+    <string name="setup_auto_model_failed">El modelo no pudo identificar un siguiente paso adecuado. Vuelve a Mika para continuar manualmente o inténtalo de nuevo.</string>
 </resources>

@@ -18,6 +18,8 @@ import com.wangzan101.mika.cap.phone.a11y.ScreenAccessibility
 import com.wangzan101.mika.cap.phone.a11y.SystemPickers
 import com.wangzan101.mika.core.shell.BuiltinShellControl
 import com.wangzan101.mika.core.shell.BuiltinShellStatus
+import com.wangzan101.mika.core.model.ModelRole
+import com.wangzan101.mika.settings.ProviderStore
 import com.wangzan101.mika.ui.SetupAutomationOverlay
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,13 +33,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withTimeoutOrNull
 
 data class SetupAutomationState(val active: Boolean = false, val message: Int = R.string.setup_auto_intro)
 
 /**
  * 用户点「自动设置」才开始的一次性会话。无障碍首次授权仍由用户完成，服务连上后继续。
- * 只在系统设置主屏的当前窗口执行已知动作；不读密码、不确认授权、不写受保护的设置。
+ * 先按规则操作，用户启用模型辅助时才让当前主模型选择候选；不读密码、不确认授权。
  * 生命周期属于 PhoneServices：离开 Mika 去系统设置不会取消，停止/超时/进程结束后不自动重启。
  */
 class SetupAutomation(
@@ -57,16 +61,22 @@ class SetupAutomation(
     private val pageAvailability = SetupAutomationAvailability()
     private val settingsPackage by lazy { SystemPickers.settingsPackage(app.packageManager) }
 
-    fun start() {
+    fun start(useModel: Boolean = false) {
         if (job?.isActive == true) return
         val currentSession = ++session
         pageAvailability.reset()
+        // 每次开始都独立建建议器，取消后旧请求不能污染新会话的次数/缓存。
+        // 在用户按开始时固定主模型；会话中不会因为后台配置变化切换到另一服务商。
+        val sessionModel = if (useModel) runCatching { ProviderStore.get(app).modelFor(ModelRole.Main) }.getOrNull() else null
+        val advisor = if (useModel) SetupModelAdvisor(
+            model = { sessionModel },
+        ) else null
         Log.i(TAG, "session started")
         update(R.string.setup_auto_enable_accessibility)
         job = scope.launch {
             var completed = false
             try {
-                completed = withTimeoutOrNull(SESSION_MS) { runSetup() } == true
+                completed = withTimeoutOrNull(SESSION_MS) { runSetup(advisor) } == true
                 Log.i(TAG, "session result=${if (completed) "completed" else "manual"}")
                 mutableState.value = SetupAutomationState(message = if (completed) R.string.setup_auto_done else R.string.setup_auto_manual)
             } catch (cancelled: CancellationException) {
@@ -109,7 +119,7 @@ class SetupAutomation(
         if (ownsPairing && control.status.value != BuiltinShellStatus.Connecting) pairing.end()
     }
 
-    private suspend fun runSetup(): Boolean {
+    private suspend fun runSetup(advisor: SetupModelAdvisor?): Boolean {
         if (settingsPackage == null) return false
         if (ScreenAccessibility.instance.value == null) {
             if (!open(listOf(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)))) return false
@@ -119,20 +129,21 @@ class SetupAutomation(
         }
         // 助手可能已由 USB/root 启动；普通解锁只确认可用，不额外开启调试或重复配对。
         if (control.status.value == BuiltinShellStatus.Running && !pairing.repairing.value) return true
-        if (!DeveloperSettings.developerOptions(app.contentResolver) && !enableDeveloperOptions()) return false
-        if (!DeveloperSettings.usbDebugging(app.contentResolver) && !enableDebugging(wireless = false)) return false
-        if (!DeveloperSettings.wirelessDebugging(app.contentResolver) && !enableDebugging(wireless = true)) return false
+        if (!DeveloperSettings.developerOptions(app.contentResolver) && !enableDeveloperOptions(advisor)) return false
+        if (!DeveloperSettings.usbDebugging(app.contentResolver) && !enableDebugging(wireless = false, advisor = advisor)) return false
+        if (!DeveloperSettings.wirelessDebugging(app.contentResolver) && !enableDebugging(wireless = true, advisor = advisor)) return false
         if (control.status.value == BuiltinShellStatus.Running && !pairing.repairing.value) return true
-        return pair()
+        return pair(advisor)
     }
 
-    private suspend fun enableDeveloperOptions(): Boolean {
+    private suspend fun enableDeveloperOptions(advisor: SetupModelAdvisor?): Boolean {
         update(R.string.setup_auto_developer)
         if (!open(DeveloperSettings.aboutPhone())) return false
         delay(PAGE_SETTLE_MS)
         var taps = 0
         var softwareOpened = false
         var scrolls = 0
+        var navigations = 0
         val deadline = SystemClock.elapsedRealtime() + STEP_MS
         while (SystemClock.elapsedRealtime() < deadline) {
             val page = page(R.string.setup_auto_developer)
@@ -151,13 +162,29 @@ class SetupAutomation(
                         SetupActionResult.Retry -> Unit
                         SetupActionResult.Failed -> return false
                     }
-                    build == null && taps == 0 && scrolls < MAX_SCROLLS -> {
-                        val scroll = it.tree.scroll() ?: return false
-                        when (it.scroll(scroll)) {
-                            SetupActionResult.Applied -> scrolls++
-                            SetupActionResult.Retry -> Unit
-                            SetupActionResult.Failed -> return false
-                        }
+                    build == null && taps < 7 -> {
+                        val suggested = modelAction(advisor, SetupModelStage.Developer, it, R.string.setup_auto_developer,
+                            canScroll = scrolls < MAX_SCROLLS, canNavigate = taps == 0 && navigations < MAX_NAVIGATIONS, deadline = deadline)
+                        if (suggested != null) {
+                            if (suggested.result == SetupActionResult.Failed) return false
+                            if (suggested.result == SetupActionResult.Applied) when (suggested.action) {
+                                SetupModelAction.Build -> taps++
+                                SetupModelAction.Navigate -> { navigations++; scrolls = 0 }
+                                SetupModelAction.Scroll -> scrolls++
+                                else -> return false
+                            }
+                        } else if (taps == 0 && scrolls < MAX_SCROLLS) {
+                            val scroll = it.tree.scroll() ?: return false
+                            when (it.scroll(scroll)) {
+                                SetupActionResult.Applied -> scrolls++
+                                SetupActionResult.Retry -> Unit
+                                SetupActionResult.Failed -> return false
+                            }
+                        } else return false
+                    }
+                    taps >= 7 && !DeveloperSettings.developerOptions(app.contentResolver) -> {
+                        // 七次已下发；只等待系统生效/用户确认，不再次借模型重复点击。
+                        Unit
                     }
                 }
             }
@@ -166,7 +193,36 @@ class SetupAutomation(
         return false
     }
 
-    private suspend fun enableDebugging(wireless: Boolean): Boolean {
+    private data class ModelActionResult(val action: SetupModelAction, val result: SetupActionResult)
+
+    private suspend fun modelAction(
+        advisor: SetupModelAdvisor?, stage: SetupModelStage, page: SettingsPage, message: Int,
+        canScroll: Boolean, canNavigate: Boolean, deadline: Long,
+    ): ModelActionResult? {
+        if (advisor == null) return null
+        val remaining = deadline - SystemClock.elapsedRealtime()
+        if (remaining <= 0) return null
+        val decision = withTimeoutOrNull(remaining) {
+            advisor.suggest(stage, page.tree) { update(R.string.setup_auto_model_thinking) }
+        }
+        currentCoroutineContext().ensureActive()
+        update(message)
+        if (decision == null) return null
+        val allowed = when (stage) {
+            SetupModelStage.Developer -> setOf(SetupModelAction.Navigate, SetupModelAction.Build, SetupModelAction.Scroll)
+            SetupModelStage.Usb, SetupModelStage.Wireless -> setOf(SetupModelAction.Navigate, SetupModelAction.Enable, SetupModelAction.Scroll)
+            SetupModelStage.Pair -> setOf(SetupModelAction.Navigate, SetupModelAction.Pair, SetupModelAction.Scroll)
+        }
+        if (decision.action !in allowed || SystemClock.elapsedRealtime() >= deadline) return null
+        if (decision.action == SetupModelAction.Scroll && !canScroll ||
+            decision.action == SetupModelAction.Navigate && !canNavigate) return null
+        val result = if (decision.action == SetupModelAction.Scroll) page.scroll(decision.nodeId) else page.click(decision.nodeId)
+        if (result == SetupActionResult.Applied) advisor.applied(decision)
+        Log.d(TAG, "model action=${decision.action} result=$result")
+        return ModelActionResult(decision.action, result)
+    }
+
+    private suspend fun enableDebugging(wireless: Boolean, advisor: SetupModelAdvisor?): Boolean {
         val message = if (wireless) R.string.setup_auto_wireless else R.string.setup_auto_usb
         val target = if (wireless) SetupTarget.Wireless else SetupTarget.Usb
         fun enabled() = if (wireless) DeveloperSettings.wirelessDebugging(app.contentResolver) else DeveloperSettings.usbDebugging(app.contentResolver)
@@ -176,6 +232,7 @@ class SetupAutomation(
         var clicked = false
         var opened = false
         var scrolls = 0
+        var navigations = 0
         var stableOn = 0
         val deadline = SystemClock.elapsedRealtime() + STEP_MS
         while (SystemClock.elapsedRealtime() < deadline) {
@@ -200,12 +257,24 @@ class SetupAutomation(
                             SetupActionResult.Retry -> Unit
                             SetupActionResult.Failed -> return false
                         }
-                        it.tree.label(target) == null && scrolls < MAX_SCROLLS -> {
-                            val scroll = it.tree.scroll() ?: return false
-                            when (it.scroll(scroll)) {
-                                SetupActionResult.Applied -> scrolls++
-                                SetupActionResult.Retry -> Unit
-                                SetupActionResult.Failed -> return false
+                        else -> {
+                            val suggested = modelAction(advisor, if (wireless) SetupModelStage.Wireless else SetupModelStage.Usb,
+                                it, message, canScroll = scrolls < MAX_SCROLLS, canNavigate = navigations < MAX_NAVIGATIONS, deadline = deadline)
+                            if (suggested != null) {
+                                if (suggested.result == SetupActionResult.Failed) return false
+                                if (suggested.result == SetupActionResult.Applied) when (suggested.action) {
+                                    SetupModelAction.Enable -> clicked = true
+                                    SetupModelAction.Navigate -> { navigations++; opened = true; scrolls = 0 }
+                                    SetupModelAction.Scroll -> scrolls++
+                                    else -> return false
+                                }
+                            } else if (it.tree.label(target) == null && scrolls < MAX_SCROLLS) {
+                                val scroll = it.tree.scroll() ?: return false
+                                when (it.scroll(scroll)) {
+                                    SetupActionResult.Applied -> scrolls++
+                                    SetupActionResult.Retry -> Unit
+                                    SetupActionResult.Failed -> return false
+                                }
                             }
                         }
                     }
@@ -217,7 +286,7 @@ class SetupAutomation(
         return false
     }
 
-    private suspend fun pair(): Boolean {
+    private suspend fun pair(advisor: SetupModelAdvisor?): Boolean {
         update(R.string.setup_auto_pairing)
         ownsPairing = true
         pairing.begin()
@@ -226,6 +295,7 @@ class SetupAutomation(
         var opened = false
         var requested = false
         var scrolls = 0
+        var navigations = 0
         val deadline = SystemClock.elapsedRealtime() + STEP_MS
         while (SystemClock.elapsedRealtime() < deadline) {
             if (control.status.value == BuiltinShellStatus.Running && !pairing.repairing.value) return true
@@ -250,13 +320,25 @@ class SetupAutomation(
                             SetupActionResult.Retry -> Unit
                             SetupActionResult.Failed -> return false
                         }
-                        scrolls < MAX_SCROLLS -> {
-                            val scroll = it.tree.scroll() ?: return false
-                            when (it.scroll(scroll)) {
-                                SetupActionResult.Applied -> scrolls++
-                                SetupActionResult.Retry -> Unit
-                                SetupActionResult.Failed -> return false
-                            }
+                        else -> {
+                            val suggested = modelAction(advisor, SetupModelStage.Pair, it, R.string.setup_auto_pairing,
+                                canScroll = scrolls < MAX_SCROLLS, canNavigate = navigations < MAX_NAVIGATIONS, deadline = deadline)
+                            if (suggested != null) {
+                                if (suggested.result == SetupActionResult.Failed) return false
+                                if (suggested.result == SetupActionResult.Applied) when (suggested.action) {
+                                    SetupModelAction.Pair -> requested = true
+                                    SetupModelAction.Navigate -> { navigations++; opened = true; scrolls = 0 }
+                                    SetupModelAction.Scroll -> scrolls++
+                                    else -> return false
+                                }
+                            } else if (scrolls < MAX_SCROLLS) {
+                                val scroll = it.tree.scroll() ?: return false
+                                when (it.scroll(scroll)) {
+                                    SetupActionResult.Applied -> scrolls++
+                                    SetupActionResult.Retry -> Unit
+                                    SetupActionResult.Failed -> return false
+                                }
+                            } else return false
                         }
                     }
                 }
@@ -388,8 +470,12 @@ class SetupAutomation(
                 Log.d(TAG, "action=$kind result=Retry reason=WindowChanged")
                 return SetupActionResult.Retry
             }
-            val active = service.windowsOn(Display.DEFAULT_DISPLAY)
-                .firstOrNull { it.id == windowId && (it.isActive || it.isFocused) }?.root ?: run {
+            if (service.getSystemService(KeyguardManager::class.java).isKeyguardLocked) return SetupActionResult.Retry
+            val top = service.windowsOn(Display.DEFAULT_DISPLAY).filter {
+                it.type != AccessibilityWindowInfo.TYPE_ACCESSIBILITY_OVERLAY &&
+                    (it.type == AccessibilityWindowInfo.TYPE_APPLICATION || it.isActive || it.isFocused)
+            }.maxByOrNull { it.layer }
+            val active = top?.takeIf { it.id == windowId && (it.isActive || it.isFocused) }?.root ?: run {
                 Log.d(TAG, "action=$kind result=Retry reason=WindowUnavailable")
                 return SetupActionResult.Retry
             }
@@ -420,6 +506,7 @@ class SetupAutomation(
         const val STEP_MS = 90_000L
         const val SESSION_MS = 5 * 60_000L
         const val MAX_SCROLLS = 12
+        const val MAX_NAVIGATIONS = 5
         const val MAX_NODES = 600
     }
 }

@@ -14,4 +14,10 @@
     <string name="setup_auto_page_unavailable">시스템이 이 설정 페이지를 Mika가 읽지 못하게 제한하여 자동 설정이 일시 중지되었습니다. Mika로 돌아가 아래의 현재 단계를 직접 완료한 뒤 “자동 설정 시작”을 누르세요. 완료한 단계는 건너뜁니다.</string>
     <string name="setup_auto_stopped">자동 설정이 중지되었습니다. 직접 계속하거나 다시 시작할 수 있습니다.</string>
     <string name="setup_auto_done">휴대전화 조작 설정이 완료되었습니다.</string>
+    <string name="setup_auto_model_title">모델로 다른 설정 메뉴 인식</string>
+    <string name="setup_auto_model_local">설정을 인식하지 못하면 현재 기기 내 주 모델로 메뉴 제목을 분석합니다. 처리는 이 기기에서 이루어집니다.</string>
+    <string name="setup_auto_model_online">설정을 인식하지 못하면 선별된 설정 메뉴 제목을 구성한 온라인 주 모델로 전송합니다. 스크린샷, 기기 세부 정보, 페어링 코드는 전송하지 않습니다.</string>
+    <string name="setup_auto_model_unavailable">「설정 → 모델」에서 주 모델을 구성하고 선택하세요. 고정 규칙을 통한 자동 설정이나 수동 설정은 계속 사용할 수 있습니다.</string>
+    <string name="setup_auto_model_thinking">현재 모델로 다음 설정 단계를 확인하는 중…</string>
+    <string name="setup_auto_model_failed">모델이 적절한 다음 단계를 찾지 못했습니다. Mika로 돌아가 수동으로 계속하거나 다시 시도하세요.</string>
 </resources>
