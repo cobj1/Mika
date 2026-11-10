@@ -136,6 +136,9 @@ data class ScreenEvent(val type: String, val packageName: String?, val text: Str
 /** 本机 OCR 从当前屏幕图像读出的文字行，边界采用与无障碍元素相同的 0–999 坐标；[confidence] 是识别给的 0–1 置信度，没有为 null。 */
 data class VisibleTextLine(val text: String, val bounds: List<Int>, val confidence: Float? = null)
 
+/** 坐标换算所需的当前几何与窗口存在性；不包含节点内容，不替代风险门的实时 peek。 */
+data class ScreenViewport(val width: Int, val height: Int, val hasWindow: Boolean)
+
 /** 内置助手以 Android shell 身份执行命令的结果。 */
 data class SystemCommandResult(val exitCode: Int, val output: String)
 
@@ -206,9 +209,17 @@ interface ScreenPort {
 
     /** 读一屏但不登记编号(模型手里的 ref 不受影响);不可逆判定用。 */
     suspend fun peek(): ScreenSnapshot = snapshot()
+    suspend fun viewport(): ScreenViewport = peek().let { ScreenViewport(it.width, it.height, it.hasWindow) }
     suspend fun screenshotPng(): ByteArray?
+    /** 连续观察缩略帧；先以同一快照调用 shouldEncode，拒绝时跳过编码返回 null。回调只能在此次调用内使用。 */
+    suspend fun observationFrame(afterNanos: Long,
+        shouldEncode: (com.wangzan101.mika.core.visual.FramePreview) -> Boolean = { true },
+    ): com.wangzan101.mika.core.visual.ObservedFrame? = null
     /** 可选的本机文字识别；null 表示当前画面不可读或端口没有 OCR。 */
     suspend fun readVisibleText(): List<VisibleTextLine>? = null
+    /** 显式按需校验局部文字；只是图文一致性依据，不作为动作授权或完成证明。 */
+    suspend fun verifyText(text: String?, region: List<Int>): TextVerification =
+        TextVerification(region = region, error = "unsupported", message = "当前端口不支持本地文字校验。")
     suspend fun tapRef(ref: String, snapshotId: String): ActionResult
     suspend fun tapXY(x: Int, y: Int): ActionResult
     /** 双击(两次点击间隔在系统认双击的时限内);不支持的端口报 double_tap_unsupported。 */
@@ -239,6 +250,8 @@ interface ScreenPort {
     suspend fun idleScroll(fraction: Double): Boolean = false
     /** 多点手势；每条路径是按时间先后排列的像素点，所有手指同时移动。 */
     suspend fun gesture(paths: List<List<Pair<Int, Int>>>, durationMs: Long): ActionResult = ActionResult.Failed("unsupported")
+    /** 跨调用保持手指；op 为 down/move/up/cancel，坐标为像素，cancel 释放本任务所有手指。 */
+    suspend fun pointer(op: String, pointerId: Int, x: Int, y: Int): ActionResult = ActionResult.Failed("unsupported")
     suspend fun back(): ActionResult
     suspend fun pressKey(keyCode: Int): ActionResult
     suspend fun openApp(packageName: String, cold: Boolean = false): ActionResult

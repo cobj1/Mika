@@ -1,5 +1,19 @@
 # Third-party notices
 
+## Qwen 本地主模型
+
+- Source: https://huggingface.co/Qwen/Qwen3-0.6B-GGUF 和 https://huggingface.co/Qwen/Qwen3-1.7B-GGUF
+- License: Apache-2.0，官方许可证随 APK 放在 `assets/licenses/QwenLocal.txt`，在应用许可页展示。
+- Usage: 用户按需下载固定官方版本的 Q8_0 GGUF。SHA、文件大小和版本见 `localmodel/LocalModelCatalog.kt`。权重不随 APK 附带。
+
+## Jev 本机运行时
+
+- Project: https://github.com/ggml-org/llama.cpp
+- Revision: `a4d4f2fd4ec85ec6a0a9ece4870416c1b6cc24f5`
+- License: MIT；静态依赖逐项许可证见 `licenses/JEV_RUNTIME_NOTICES.txt`，同一文本随 APK 放在 `assets/licenses/JevRuntime.txt` 并在许可页展示。
+- Usage: 独立 Android arm64 CPU 程序，按用户请求加载 Jev 或 Qwen 本地主模型，完成后退出；入口补父进程退出联动，构建脚本和入口源码位于 `tools/jev/`。
+- Model: `openbmb/MiniCPM-OCR-Jev-gguf`，Apache-2.0；权重不随 APK 发布，由用户按需从固定官方版本下载。
+
 ## scrcpy
 
 - Project: https://github.com/Genymobile/scrcpy

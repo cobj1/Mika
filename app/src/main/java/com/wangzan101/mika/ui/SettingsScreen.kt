@@ -90,6 +90,7 @@ fun SettingsScreen(
     onOpenAbout: () -> Unit = {},
     /** 外部 MCP server 设置(outbound);为空时不显示入口。 */
     mcpServers: com.wangzan101.mika.settings.McpServerStore? = null,
+    onOpenJev: (() -> Unit)? = null,
 ) {
     val configs by store.configs.collectAsState()
     val roles by store.roles.collectAsState()
@@ -175,6 +176,8 @@ fun SettingsScreen(
             status = status, androidRelease = androidRelease,
             mainModel = roles.main?.let { id -> configs.firstOrNull { it.id == id } }?.let(ProviderConnection::displayName),
             onBack = onBack, onProblem = onProblem, onOpenModels = onOpenModels,
+            onOpenJev = onOpenJev,
+            onOpenPhoneSetup = { onFix(Fix.OpenPhoneSetup) },
             onOpenPhoneOps = { page = SettingsPage.PhoneOps },
             wechatState = wechatState, wechatBound = wechat.store.account() != null,
             onOpenWechat = { page = SettingsPage.Wechat },
@@ -204,6 +207,7 @@ fun SettingsScreen(
         SettingsPage.PhoneOps -> PhoneOpsScreen(
             status, androidRelease, onProblem,
             onRepair = { onFix(Fix.RepairPhoneHelper) }, onUnpair = { onFix(Fix.UnpairPhoneHelper) }, onBack = toHome,
+            onSetup = { onFix(Fix.OpenPhoneSetup) },
         )
         SettingsPage.Notifications -> NotificationsScreen(status, onFix = ::fix, onBack = back)
         SettingsPage.DuringWork -> DuringWorkScreen(
@@ -330,6 +334,8 @@ fun SettingsContent(
     versionName: String = "",
     updateVersion: String? = null,
     onOpenAbout: () -> Unit = {},
+    onOpenJev: (() -> Unit)? = null,
+    onOpenPhoneSetup: () -> Unit = {},
 ) {
     val check = Prerequisites.check(status, hasMainModel = mainModel != null)
     PageScaffold(stringResource(R.string.settings_title), onBack) {
@@ -340,6 +346,14 @@ fun SettingsContent(
             ListRow(MikaIcons.Spark, stringResource(R.string.settings_model), stringResource(R.string.settings_model_sub), first = true, onClick = onOpenModels) {
                 RowValue(mainModel ?: stringResource(R.string.settings_not_set))
                 RowChevron()
+            }
+            onOpenJev?.let { open ->
+                ListRow(MikaIcons.Doc, stringResource(R.string.jev_title), stringResource(R.string.jev_intro), onClick = open) { RowChevron() }
+            }
+            if (status.sdkInt >= Prerequisites.MIN_SDK &&
+                (status.builtinShell != BuiltinShellStatus.Running || status.accessibility != AccessibilityState.On)) {
+                ListRow(MikaIcons.Spark, stringResource(R.string.setup_advanced_title), stringResource(R.string.setup_advanced_intro),
+                    onClick = onOpenPhoneSetup) { RowChevron() }
             }
             ListRow(MikaIcons.Phone, stringResource(R.string.settings_phone_ops), onClick = onOpenPhoneOps) {
                 PhoneOpsPill(status)

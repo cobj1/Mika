@@ -61,6 +61,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
@@ -130,6 +131,8 @@ class AndroidScreen(
      */
     private val awaitApp: suspend (packageName: String, user: Int?, timeoutMs: Long, free: suspend () -> Boolean) -> AppWait =
         { _, _, _, _ -> AppWait.Unsupported },
+    /** 持续按压只允许在任务运行中开始或续接；暂停和接管仍可取消。 */
+    private val pointerAllowed: () -> Boolean = { true },
 ) : ScreenPort {
     /** 屏还没建时为 -1;只在确认屏已建好之后用。 */
     private val displayId get() = display.current?.displayId ?: -1
@@ -138,6 +141,27 @@ class AndroidScreen(
     private val screenWidth get() = display.current?.width ?: display.width
     private val screenHeight get() = display.current?.height ?: display.height
     private val ids = NodeIds()
+    private val pointerLock = Any()
+    private val pointerOwner = Any()
+    private var pointerHeld = false
+
+    /** 任务暂停/取消/接管与普通控件动作均经这里释放；不受任务协程已取消影响。 */
+    suspend fun cancelPointers(): Boolean = withContext(NonCancellable + Dispatchers.IO) {
+        InjectedInputGate.shared.pointer(pointerOwner, { pointerHeld },
+            { synchronized(pointerLock) { cancelPointersNow() } }, cancelOnly = true) {
+            synchronized(pointerLock) { cancelPointersNow() }
+        } && !InjectedInputGate.shared.completionPending
+    }
+
+    private fun cancelPointersNow(): Boolean {
+        if (!pointerHeld) return true
+        val id = display.current?.displayId ?: return false
+        val count = runCatching { shell.injectPointer(id, 3, 0, 0, 0) }.getOrDefault(-2)
+        // cancel 的 -1 只可能是服务已不再持有该屏；Binder死亡也意味着助手持有的副屏已销毁。
+        val cleared = count == 0 || count == -1 || runCatching { !shell.asBinder().isBinderAlive }.getOrDefault(false)
+        if (cleared) pointerHeld = false
+        return cleared
+    }
 
     /** 最近一次 launch_app 成功打开的包,用于判断是否被切走。 */
     @Volatile private var targetPackage: String? = null
@@ -183,6 +207,11 @@ class AndroidScreen(
 
     // 不进编号登记表:模型手里最新的 ref 仍然有效
     override suspend fun peek(): ScreenSnapshot = capture(register = false)
+
+    override suspend fun viewport() = withContext(Dispatchers.IO) {
+        com.wangzan101.mika.core.uistate.ScreenViewport(screenWidth, screenHeight,
+            hasDisplay && windows().any { it.type == AccessibilityWindowInfo.TYPE_APPLICATION })
+    }
 
     private suspend fun capture(register: Boolean): ScreenSnapshot = withContext(Dispatchers.IO) {
         if (!hasDisplay) return@withContext ScreenSnapshot(snapshotId(), null, emptyList(), screenWidth, screenHeight, hasWindow = false)
@@ -243,6 +272,14 @@ class AndroidScreen(
         display.current?.latestFramePng()
     }
 
+    override suspend fun observationFrame(afterNanos: Long, shouldEncode: (com.wangzan101.mika.core.visual.FramePreview) -> Boolean) = withContext(Dispatchers.IO) {
+        val samplingContext = currentCoroutineContext()
+        samplingContext.ensureActive()
+        if (!frameServable() || frameBlack() == true) null else display.current?.latestObservation(afterNanos, shouldEncode) {
+            samplingContext.ensureActive()
+        }
+    }
+
     /** 最近一次启动开始的单调时钟时刻（纳秒），与虚拟屏生产者的帧时间戳比较。 */
     @Volatile private var frameGuardSince: Long? = null
 
@@ -280,8 +317,20 @@ class AndroidScreen(
 
     override suspend fun frameGrid(): FrameGrid? = withContext(Dispatchers.IO) {
         if (!frameServable()) return@withContext null
-        val bmp = display.current?.frames?.value ?: return@withContext null
-        runCatching { FrameGrid.sample(bmp.width, bmp.height, bmp::getPixel) }.getOrNull()
+        display.current?.latestFrameGrid()
+    }
+
+    override suspend fun verifyText(text: String?, region: List<Int>) = withContext(Dispatchers.IO) {
+        val current = display.current
+        if (current == null || !frameServable() || isProtected() || frameBlack() == true)
+            return@withContext com.wangzan101.mika.core.uistate.TextVerification(region = region,
+                error = "screen_unavailable", message = "当前画面不可用于文字校验。")
+        val result = AgentTextVerification.verify(a11y, current, text, region)
+        currentCoroutineContext().ensureActive()
+        if (display.current !== current || !frameServable() || isProtected() || frameBlack() == true)
+            com.wangzan101.mika.core.uistate.TextVerification(region = region,
+                error = "screen_changed", message = "校验期间画面已不可用，请重新观察。")
+        else result
     }
 
     override suspend fun checkScreen(): ScreenCheck = withContext(Dispatchers.IO) {
@@ -403,6 +452,7 @@ class AndroidScreen(
 
     override suspend fun systemCommand(command: String): SystemCommandResult? = withContext(Dispatchers.IO) {
         if (!hasDisplay) return@withContext null
+        if (!cancelPointers()) return@withContext SystemCommandResult(-1, "Could not cancel held pointers.")
         val result = shell.runSystemCommand(displayId, command)
         SystemCommandResult(result.getInt("exitCode", -1), result.getString("output").orEmpty())
     }
@@ -456,6 +506,43 @@ class AndroidScreen(
         }
     }
 
+    override suspend fun pointer(op: String, pointerId: Int, x: Int, y: Int): ActionResult = withContext(Dispatchers.IO) {
+        if (!hasDisplay) return@withContext NO_APP_OPEN
+        val code = when (op) { "down" -> 0; "move" -> 1; "up" -> 2; "cancel" -> 3; else -> return@withContext ActionResult.Failed("invalid_pointer") }
+        if (code != 3) {
+            if (pointerId !in 0..9 || x !in 0 until screenWidth || y !in 0 until screenHeight) return@withContext ActionResult.Failed("invalid_pointer")
+            lateSpill()?.let {
+                cancelPointers()
+                return@withContext ActionResult.Failed("opened_elsewhere", hintLateSpill(it.opened))
+            }
+            if (handedOver() || !pointerAllowed()) {
+                cancelPointers()
+                return@withContext ActionResult.Failed("user_takeover")
+            }
+            armSpillWatch()
+        }
+        currentCoroutineContext().ensureActive()
+        val count = InjectedInputGate.shared.pointer(pointerOwner, { pointerHeld },
+            { synchronized(pointerLock) { cancelPointersNow() } }, cancelOnly = code == 3) {
+            synchronized(pointerLock) {
+                if (code != 3 && (handedOver() || !pointerAllowed())) {
+                    cancelPointersNow()
+                    return@synchronized -1
+                }
+                // Binder返回前任务也可能被取消；先记下可能的按压，收尾才不会漏掉它。
+                if (code == 0) pointerHeld = true
+                runCatching { shell.injectPointer(displayId, code, pointerId, x, y) }.getOrDefault(-2).also {
+                    if (it >= 0) pointerHeld = it > 0
+                }
+            }
+        }
+        when {
+            count >= 0 -> ActionResult.Ok(hint = "activePointers=$count; input dispatched, outcome not verified; idle cancellation after 30 seconds.")
+            count == -1 -> ActionResult.Failed("invalid_pointer", "Finger state or display geometry changed. Observe again before starting a new gesture.")
+            else -> ActionResult.Failed("pointer_failed", "Input failed; cancellation was attempted. Observe before retrying.")
+        }
+    }
+
     override suspend fun scroll(ref: String?, snapshotId: String?, down: Boolean): ActionResult = withContext(Dispatchers.IO) {
         if (!hasDisplay) return@withContext NO_APP_OPEN
         var relocatedTo: String? = null
@@ -483,6 +570,7 @@ class AndroidScreen(
      * 弹着输入法、输入框拿着焦点、上面盖着别的窗口(弹框、浮层)、没有够大的可滚动内容时不滚。
      */
     override suspend fun idleScroll(fraction: Double): Boolean = withContext(Dispatchers.IO) {
+        if (!cancelPointers()) return@withContext false
         if (!hasDisplay || imeBox() != null || focusedEditable() != null) return@withContext false
         if (ScreenReader.contentWindows(windows()).count { it.type == AccessibilityWindowInfo.TYPE_APPLICATION } > 1) return@withContext false
         val area = read().entries.filter { it.element.scrollable }
@@ -509,6 +597,7 @@ class AndroidScreen(
     }
 
     override suspend fun typeText(ref: String?, snapshotId: String?, text: String): ActionResult = withContext(Dispatchers.IO) {
+        if (!cancelPointers()) return@withContext ActionResult.Failed("pointer_cancel_failed")
         if (!hasDisplay) return@withContext NO_APP_OPEN
         val found = when (val f = findField(ref, snapshotId)) {
             is Field.Found -> f
@@ -599,6 +688,7 @@ class AndroidScreen(
     }
 
     override suspend fun clearText(ref: String?, snapshotId: String?): ActionResult = withContext(Dispatchers.IO) {
+        if (!cancelPointers()) return@withContext ActionResult.Failed("pointer_cancel_failed")
         if (!hasDisplay) return@withContext NO_APP_OPEN
         val found = when (val f = findField(ref, snapshotId, tapToFocus = false)) {
             is Field.Found -> f
@@ -633,6 +723,7 @@ class AndroidScreen(
      * 点了就换到别的 App(点到了链接、按钮)时不打字。
      */
     override suspend fun typeAt(x: Int, y: Int, text: String): ActionResult = withContext(Dispatchers.IO) {
+        if (!cancelPointers()) return@withContext ActionResult.Failed("pointer_cancel_failed")
         if (!hasDisplay) return@withContext NO_APP_OPEN
         val anchor = contextPasteAnchor(x, y)
         val original = anchor?.let(FieldShape::of)
@@ -735,6 +826,7 @@ class AndroidScreen(
 
     /** 清空这一点上的输入框,做法同 [typeAt]。 */
     override suspend fun clearAt(x: Int, y: Int): ActionResult = withContext(Dispatchers.IO) {
+        if (!cancelPointers()) return@withContext ActionResult.Failed("pointer_cancel_failed")
         if (!hasDisplay) return@withContext NO_APP_OPEN
         val anchor = contextPasteAnchor(x, y)
         val tapped = verified { tapAt(x, y) }
@@ -1010,6 +1102,7 @@ class AndroidScreen(
 
     /** [openApp] / [openAppCopy] 的共同部分;[user] 为空是本来那份。 */
     private suspend fun open(packageName: String, user: Int?, cold: Boolean): ActionResult = withContext(Dispatchers.IO) {
+        if (!cancelPointers()) return@withContext ActionResult.Failed("pointer_cancel_failed")
         // 同一个 App 不能同时在两块屏上:系统会把整个任务挪过来,等于从另一个任务手里抢走它。装了两份的,两份各算各的
         if (checkOtherTasks) {
             if (onOtherDisplay(packageName, user)) return@withContext IN_USE_BY_OTHER
@@ -1052,6 +1145,7 @@ class AndroidScreen(
      * 认系统问打开哪一个。这个 App 不收文字分享为 cannot_share。只打开分享页,发不发由模型在那一页上点。
      */
     override suspend fun shareText(packageName: String, text: String): ActionResult = withContext(Dispatchers.IO) {
+        if (!cancelPointers()) return@withContext ActionResult.Failed("pointer_cancel_failed")
         if (checkOtherTasks) {
             val other = runCatching { shell.displayOfPackage(packageName) }.getOrDefault(-1)
             if (other >= 0 && other != display.current?.displayId) return@withContext IN_USE_BY_OTHER
@@ -1226,6 +1320,7 @@ class AndroidScreen(
      * 设置页预期落在系统设置所在的包,指定了 App 的落在那个 App;落到别处(系统选择器、跳转页)照样成功,带提示。
      */
     override suspend fun openLink(action: String?, uri: String?, packageName: String?): ActionResult = withContext(Dispatchers.IO) {
+        if (!cancelPointers()) return@withContext ActionResult.Failed("pointer_cancel_failed")
         // 指定了 App 的由应用访问边界看过;没指定的,名单非空时在这里挑一个没被禁用的接手
         val pinned = packageName ?: allowedLinkHandler(action, uri)
         val id = display.get().displayId
@@ -1325,6 +1420,7 @@ class AndroidScreen(
      * 闹钟、计时器本该悄悄设好:之后读系统的下一个闹钟核对;App 却开了界面时照实报。闹钟列表、新日程要等那个 App 到最上面。
      */
     override suspend fun systemAction(action: SystemAction): SystemActionResult = withContext(Dispatchers.IO) {
+        if (!cancelPointers()) return@withContext SystemActionResult(ActionResult.Failed("pointer_cancel_failed"))
         val intent = SystemIntents.toIntent(SystemIntents.spec(action))
         val pm = a11y.packageManager
         val handlers = runCatching {
@@ -1407,6 +1503,7 @@ class AndroidScreen(
     // ---------- 滚轮 ----------
 
     override suspend fun setWheel(ref: String, snapshotId: String, value: String): WheelOutcome = withContext(Dispatchers.IO) {
+        if (!cancelPointers()) return@withContext WheelOutcome(false, null, null, 0, "none", error = "pointer_cancel_failed")
         if (!hasDisplay) return@withContext WheelOutcome(false, null, null, 0, "none", error = "no_app_open")
         val (node, _) = resolve(ref, snapshotId) ?: return@withContext WheelOutcome(false, null, null, 0, "none", error = "ref_expired")
         val driver = WheelDriver(
@@ -1495,6 +1592,7 @@ class AndroidScreen(
      * 结果里报 opened(见 [takeSpill])。上一个动作过了一会儿才开到主屏上的,这一个动作不做,先说屏幕变了。
      */
     private suspend fun verified(relocatedTo: String? = null, action: suspend () -> Boolean): ActionResult {
+        if (!cancelPointers()) return ActionResult.Failed("pointer_cancel_failed")
         lateSpill()?.let { return ActionResult.Failed("opened_elsewhere", hintLateSpill(it.opened)) }
         val beforeTree = treeHash()
         val beforeFrame = frameSignature()
@@ -2221,17 +2319,11 @@ class AndroidScreen(
 
     // ---------- 画面 ----------
 
-    /** 预览帧的粗粒度亮度格子;没有画面时为 null。 */
-    private fun frameSignature(): IntArray? {
-        val bmp = display.current?.frames?.value ?: return null
-        return runCatching { FrameMath.lumaGrid(bmp.width, bmp.height, bmp::getPixel) }.getOrNull()
-    }
+    /** 内部最新帧的粗粒度亮度格子，独立于 UI 是否在展示预览。 */
+    private fun frameSignature(): IntArray? = display.current?.latestFrameSignature()
 
     /** 画面是否全黑;安全窗口和虚拟屏合成失败都可能产生这种帧,不能单靠它判原因。 */
-    private fun frameBlack(): Boolean? {
-        val bmp = display.current?.frames?.value ?: return null
-        return runCatching { FrameMath.isBlack(bmp.width, bmp.height, bmp::getPixel) }.getOrNull()
-    }
+    private fun frameBlack(): Boolean? = display.current?.latestFrameBlack()
 
     // ---------- 事件时钟 ----------
 

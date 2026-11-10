@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jev_title">Проверка текста OCR</string>
+    <string name="jev_intro">Jev сравнивает распознанный текст с исходным изображением. Работает на этом устройстве и не заменяет модель чата.</string>
+    <string name="jev_download_note">Необязательная загрузка: около 1.95 ГБ. При проверке изображения и текст остаются на устройстве.</string>
+    <string name="jev_download">Скачать / продолжить</string>
+    <string name="jev_stop">Остановить</string>
+    <string name="jev_remove">Удалить модель</string>
+    <string name="jev_remove_confirm">Удалить загруженные файлы модели? Их можно будет скачать снова.</string>
+    <string name="jev_ready">Модель готова</string>
+    <string name="jev_downloading">Загрузка модели…</string>
+    <string name="jev_verifying">Проверка загруженных файлов…</string>
+    <string name="jev_loading">Загрузка модели в память…</string>
+    <string name="jev_scoring">Проверка текста…</string>
+    <string name="jev_progress">%1$d%%</string>
+    <string name="jev_leave_note">При выходе с этой страницы загрузка приостанавливается, а проверка прекращается. Незавершённую загрузку можно продолжить.</string>
+    <string name="jev_input_title">Проверить область текста</string>
+    <string name="jev_crop_hint">Выберите изображение одной строки или абзаца либо обрежьте его ползунками границ ниже. Вставьте текст OCR. Таблицы и формулы не поддерживаются.</string>
+    <string name="jev_choose_image">Выбрать изображение</string>
+    <string name="jev_image_selected">Изображение выбрано</string>
+    <string name="jev_text_label">Текст OCR</string>
+    <string name="jev_text_count">%1$d / %2$d</string>
+    <string name="jev_score">Проверить на устройстве</string>
+    <string name="jev_score_value">Оценка соответствия: %1$s</string>
+    <string name="jev_score_note">Чем выше оценка, тем вероятнее совпадение текста с изображением. Оценка не откалибрована для этого устройства и OCR и не подтверждает успешность действий на телефоне.</string>
+    <string name="jev_download_error">Ошибка загрузки. Проверьте сеть и повторите попытку; загруженные части сохранены.</string>
+    <string name="jev_integrity_error">Файлы модели не прошли проверку. Скачайте их заново.</string>
+    <string name="jev_no_space">Недостаточно места. Освободите место и повторите попытку.</string>
+    <string name="jev_memory_low">Недостаточно свободной памяти. Закройте другие приложения и повторите попытку.</string>
+    <string name="jev_runtime_error">Не удалось запустить движок проверки. Повторите попытку.</string>
+    <string name="jev_image_error">Не удалось прочитать выбранное изображение. Выберите другое.</string>
+    <string name="jev_input_error">Выберите область текста и введите от 1 до 1000 символов OCR.</string>
+    <string name="jev_timeout">Время проверки истекло. Попробуйте меньшее изображение или более короткий текст.</string>
+    <string name="jev_unavailable">Локальная проверка Jev не поддерживается на этом устройстве.</string>
+    <string name="jev_cached">Использован недавний результат текущего посещения страницы. Модель не загружалась повторно.</string>
+    <string name="jev_timing">Загрузка %1$s с · Оценка %2$s с</string>
+    <string name="jev_crop_horizontal">Левая и правая границы</string>
+    <string name="jev_crop_vertical">Верхняя и нижняя границы</string>
+    <string name="jev_crop_reset">Восстановить всё изображение</string>
+    <string name="jev_text_layout_error">Слишком много строк. Оставьте одну строку или один абзац текста.</string>
+    <string name="jev_device_ready">Текущие ресурсы прошли предварительную проверку. Реальную производительность нужно оценить на этом телефоне.</string>
+    <string name="jev_busy">Уже выполняется другая локальная проверка текста. Повторите попытку позже.</string>
+    <string name="jev_recheck">Проверить устройство ещё раз</string>
+    <string name="jev_read_image">Распознать текст в выбранной области</string>
+    <string name="jev_ocr_empty">Не удалось распознать пригодный текст. Измените область или введите текст вручную.</string>
+    <string name="jev_crop_detail">Выбранная область</string>
+</resources>

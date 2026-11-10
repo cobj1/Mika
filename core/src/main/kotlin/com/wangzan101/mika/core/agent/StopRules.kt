@@ -59,6 +59,7 @@ internal object StopRules {
 }
 
 internal fun userReason(e: ModelError): String = when (e) {
+    is ModelError.LocalUnavailable -> "本地模型暂时不可用：${e.detail}可在设置 › 模型中检查或切换模型。"
     is ModelError.Auth -> "模型服务拒绝了请求:API Key 无效或没有权限。请在设置里检查 API Key 是否填写正确、是否有权使用该模型。"
     is ModelError.QuotaExceeded -> "模型账户额度已用完,请检查服务商账户的余额或套餐。"
     is ModelError.ModelNotFound -> {

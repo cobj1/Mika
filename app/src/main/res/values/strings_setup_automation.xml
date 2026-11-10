@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_auto_title">Automatic setup</string>
+    <string name="setup_auto_start">Start automatic setup</string>
+    <string name="setup_auto_stop">Stop</string>
+    <string name="setup_auto_intro">First, manually enable Mika accessibility. Mika will then open Developer options, enable USB and wireless debugging, and pair this phone. Enter any screen lock password and confirm system prompts yourself.</string>
+    <string name="setup_auto_enable_accessibility">Manually enable the Mika accessibility service in Settings. Setup will continue automatically once it is connected.</string>
+    <string name="setup_auto_developer">Opening Developer options…</string>
+    <string name="setup_auto_usb">Enabling USB debugging…</string>
+    <string name="setup_auto_wireless">Opening wireless debugging…</string>
+    <string name="setup_auto_pairing">Opening the pairing window. Mika will read the code and pair automatically.</string>
+    <string name="setup_auto_confirm">Complete the confirmation or identity check on the system screen. Setup will then continue automatically.</string>
+    <string name="setup_auto_manual">Automatic setup has paused. Return to Mika to finish the steps manually, or try again.</string>
+    <string name="setup_auto_stopped">Automatic setup stopped. You can continue manually or start again.</string>
+    <string name="setup_auto_done">Phone setup is complete.</string>
+</resources>

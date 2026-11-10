@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_access_title">Aktifkan aksesibilitas terlebih dahulu</string>
+    <string name="onboarding_access_body">Aktifkan Mika di setelan Aksesibilitas sistem agar dapat membaca antarmuka dan mengoperasikan aplikasi untuk Anda. Anda memilih apakah akan memberikan akses. Setelah itu, atur model AI; kontrol ponsel lanjutan dapat diaktifkan nanti.</string>
+    <string name="onboarding_access_open">Izinkan aksesibilitas</string>
+    <string name="onboarding_access_continue">Lanjutkan ke pengaturan model</string>
+    <string name="onboarding_access_connected">Layanan aksesibilitas Mika terhubung.</string>
+    <string name="onboarding_access_app_info">Tidak bisa mengaktifkan? Izinkan setelan terbatas di Info aplikasi.</string>
+    <string name="onboarding_later">Nanti</string>
+    <string name="onboarding_advanced_title">Aktifkan fitur lanjutan</string>
+    <string name="onboarding_advanced_body">Izinkan Mika mengoperasikan aplikasi di layar latar belakang terpisah. Tombol di bawah memulai panduan Opsi developer, Debugging USB, Debugging nirkabel, dan pemasangan. Chat, tugas web, dan berkas tidak memerlukan langkah ini.</string>
+    <string name="onboarding_advanced_enable">Aktifkan fitur lanjutan</string>
+    <string name="onboarding_advanced_confirmation">Pengaturan ini gratis dan opsional. Anda tetap memasukkan sandi layar kunci dan mengonfirmasi perintah sistem sendiri.</string>
+    <string name="onboarding_model_saved">Model disimpan</string>
+</resources>

@@ -61,6 +61,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wangzan101.mika.core.model.ModelRole
+import com.wangzan101.mika.localmodel.LocalModelCatalog
 import com.wangzan101.mika.settings.ModelContextSettings
 import com.wangzan101.mika.settings.MODEL_READ_TIMEOUT_SECONDS
 import com.wangzan101.mika.settings.ModelOption
@@ -90,9 +91,11 @@ import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 
+private enum class ModelSetupPage { Choice, Online, Local }
+
 /**
- * 配置模型:用途(主模型、看图模型、轻量模型)和服务商两块。首次上手时 [onboarding] 为真
- * (服务商在前,底部有分页点和「下一步」);设置 › 模型([ModelsScreen])也是这一页,标题和引导语不同,没有底部按钮。
+ * 首次上手先选择手机本地或在线模型；本地下载、测试通过后才启用并前进。
+ * 在线配置分用途和服务商，上手时服务商在前；设置 › 模型([ModelsScreen])也可管理本地模型。
  * 选用途、服务商详情、服务商的全部模型是这一页里的子页面。上手时「下一步」选好主模型才可点,点了调 [onDone]。
  */
 @Composable
@@ -117,6 +120,21 @@ fun ModelSetupScreen(
         )
     }
     val ui by vm.state.collectAsState()
+    var setupPage by rememberSaveable {
+        mutableStateOf(if (onboarding && store.roles.value.main == null) ModelSetupPage.Choice else ModelSetupPage.Online)
+    }
+    var onboardingCompleted by rememberSaveable { mutableStateOf(false) }
+    // 只在首次流程里、保存及选主模型已经结束后前进；失败或只存服务商但没选主模型时留在这里。
+    val finishSetup = {
+        if (!onboarding || !onboardingCompleted) {
+            onboardingCompleted = onboarding
+            onDone()
+        }
+    }
+    LaunchedEffect(onboarding, ui.onboardingReady, setupPage) {
+        // 本地启用要等实际试运行成功后的回调；不能仅因服务商存储流更新就提前离页。
+        if (onboarding && setupPage == ModelSetupPage.Online && ui.onboardingReady) finishSetup()
+    }
     var picking by rememberSaveable { mutableStateOf<ModelRole?>(null) }
     var openProvider by rememberSaveable { mutableStateOf<String?>(null) }
     var allModels by rememberSaveable { mutableStateOf(false) }
@@ -140,6 +158,19 @@ fun ModelSetupScreen(
     val provider = openProvider?.let { id -> ui.providers.firstOrNull { it.id == id } }
     val role = picking
     when {
+        setupPage == ModelSetupPage.Choice -> ModelModeChoice(
+            onLocal = { setupPage = ModelSetupPage.Local },
+            onOnline = { setupPage = ModelSetupPage.Online },
+            onBack = onBack,
+        )
+        setupPage == ModelSetupPage.Local || provider?.baseUrl == LocalModelCatalog.BASE_URL -> LocalModelScreen(
+            store = store,
+            onBack = { openProvider = null; setupPage = if (onboarding) ModelSetupPage.Choice else ModelSetupPage.Online },
+            onActivated = {
+                openProvider = null
+                if (onboarding) finishSetup() else setupPage = ModelSetupPage.Online
+            },
+        )
         provider != null -> {
             LaunchedEffect(provider.id) { vm.ensureListed() }
             val accountKind = when {
@@ -194,7 +225,8 @@ fun ModelSetupScreen(
         }
         else -> {
             if (ui.chatGptWelcome) ChatGptWelcome(vm::dismissChatGptWelcome)
-            BackHandler(onBack = onBack)
+            val back = { if (onboarding) setupPage = ModelSetupPage.Choice else onBack() }
+            BackHandler(onBack = back)
             ModelSetupContent(
                 ui, onboarding,
                 ModelSetupActions(
@@ -202,13 +234,18 @@ fun ModelSetupScreen(
                     setModel = vm::setModel, setManual = vm::setManual, setName = vm::setName,
                     testAndSave = vm::testAndSave, saveUntested = vm::saveWithoutTest,
                     openForm = vm::openForm, closeForm = vm::closeForm,
-                    openProvider = { openProvider = it; allModels = false }, pickRole = { picking = it }, next = onDone, openSpeech = onOpenSpeech,
+                    openProvider = {
+                        if (ui.providers.firstOrNull { p -> p.id == it }?.baseUrl == LocalModelCatalog.BASE_URL) setupPage = ModelSetupPage.Local
+                        else openProvider = it
+                        allModels = false
+                    }, pickRole = { picking = it }, next = finishSetup, openSpeech = onOpenSpeech,
                     openUsage = onOpenUsage,
+                    openLocal = { setupPage = ModelSetupPage.Local },
                     openSignIn = { signInSheet = it },
                     setReasoningEffort = vm::setReasoningEffort,
                     setModelContext = vm::setModelContext,
                 ),
-                onBack,
+                back,
             )
         }
     }
@@ -262,6 +299,8 @@ class ModelSetupActions(
     val openSignIn: (SignInKind) -> Unit = {},
     val setReasoningEffort: (ModelRole, String?) -> Unit = { _, _ -> },
     val setModelContext: (String, ModelContextSettings) -> Boolean = { _, _ -> false },
+    /** 手机端下载和启用，不是 Ollama 等远端服务配置。 */
+    val openLocal: (() -> Unit)? = null,
 )
 
 /**
@@ -279,6 +318,12 @@ fun ModelSetupContent(ui: ModelSetupUi, onboarding: Boolean, actions: ModelSetup
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars).windowInsetsPadding(WindowInsets.ime)) {
             TopBar(if (onboarding) ModelSetupCopy.TITLE else ModelsCopy.TITLE, MikaIcons.Back, onBack, stringResource(R.string.back))
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+                actions.openLocal?.let { open ->
+                    GroupCard(Modifier.padding(top = 4.dp, bottom = 12.dp)) {
+                        ListRow(MikaIcons.Phone, stringResource(R.string.local_model_title),
+                            stringResource(R.string.local_model_entry), first = true, onClick = open) { RowChevron() }
+                    }
+                }
                 if (onboarding) {
                     Text(
                         ModelSetupCopy.LEAD, Modifier.padding(top = 4.dp, bottom = 12.dp),
@@ -565,7 +610,7 @@ private fun RolesSection(ui: ModelSetupUi, onPick: (ModelRole) -> Unit, onReason
 }
 
 private fun hasModelContextControl(ui: ModelSetupUi, role: ModelRole): Boolean =
-    ui.roles[role] is RoleChoice.Model && ui.configFor(role) != null
+    ui.roles[role] is RoleChoice.Model && ui.configFor(role)?.let { it.baseUrl != LocalModelCatalog.BASE_URL } == true
 
 @Composable
 private fun ModelContextControl(ui: ModelSetupUi, role: ModelRole,

@@ -75,6 +75,26 @@ class ModelSetupViewModelTest {
 
     private val deepseekUrl = "https://api.deepseek.com"
     private val qwenUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+
+    @Test fun onboardingAdvancesOnlyAfterMainModelIsSavedAndPromptsAreFinished() = runTest {
+        listing[deepseekUrl] = deepseek
+        val vm = vm()
+        runCurrent()
+        assertFalse(vm.state.value.onboardingReady)
+        vm.setApiKey("sk-test")
+        vm.testAndSave()
+        assertFalse(vm.state.value.onboardingReady)
+        runCurrent()
+        val saved = vm.state.value
+        assertTrue(saved.onboardingReady)
+        assertFalse(saved.copy(roles = saved.roles.copy(main = null)).onboardingReady)
+        assertFalse(saved.copy(formOpen = true).onboardingReady)
+        assertFalse(saved.copy(form = saved.form.copy(test = ListState.Running)).onboardingReady)
+        assertFalse(saved.copy(form = saved.form.copy(test = ListState.Failed("failed"))).onboardingReady)
+        assertFalse(saved.copy(chatGptWelcome = true).onboardingReady)
+        assertFalse(saved.copy(accountSignIn = AccountSignInUi(running = true)).onboardingReady)
+        assertFalse(saved.copy(chatGptSignIn = ListState.Running).onboardingReady)
+    }
     private val deepseek = ModelListResult.Ok(
         listOf(ListedModel("deepseek-chat"), ListedModel("deepseek-reasoner"), ListedModel("deepseek-coder", toolCalls = false)),
     )

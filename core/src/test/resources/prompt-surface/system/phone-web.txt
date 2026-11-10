@@ -461,7 +461,7 @@ Mika has its own built-in browser, in which you can get things done on websites.
 - Downloaded files are saved under /workspace/downloads/ in the workspace. Say a file is downloaded only when web_downloads shows status=done. When a download fails, error gives the reason (with the kind of failure): use it to decide whether to retry, try another link or tell the user plainly.
 - web_upload takes the ref of a file picker control (an element with role file in the screen read) and can only upload files under /workspace/. When the user wants to upload a file from their phone, ask them to send it as an attachment in the chat first (it goes into /workspace/inbox/).
 
-==== tools (59) ====
+==== tools (61) ====
 wait #8ed080dc3f35
 ask_user #9aba9bc58f9e
 request_confirmation #010f6f355b93
@@ -487,6 +487,8 @@ phone_wait #c5c73f60f068
 phone_event #45093cbd4ca1
 phone_dialog #ffdf9f3048b0
 phone_gesture #b4c09a3789c3
+phone_touch #e44e74547036
+phone_verify_text #5e734f26fe73
 phone_set_wheel #90671f37593d
 phone_run #3c97e8a25ed9
 phone_system_command #b4b7cb438231

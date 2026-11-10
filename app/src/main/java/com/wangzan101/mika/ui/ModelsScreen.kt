@@ -1,5 +1,7 @@
 package com.wangzan101.mika.ui
 
+import com.wangzan101.mika.localmodel.LocalModelCatalog
+
 import com.wangzan101.mika.R
 import com.wangzan101.mika.core.oauth.AccountSignInException
 import com.wangzan101.mika.core.oauth.AccountSignInFailure
@@ -197,7 +199,8 @@ internal fun fixedChoices(role: ModelRole): List<RoleChoice> = when (role) {
 fun RolePickerContent(ui: ModelSetupUi, role: ModelRole, actions: RolePickerActions, onBack: () -> Unit) {
     val c = MikaTheme.colors
     var filter by rememberSaveable { mutableStateOf("") }
-    val groups = ui.providers.map { it to ui.options(it) }
+    val groups = ui.providers.filter { role != ModelRole.Vision || it.baseUrl != LocalModelCatalog.BASE_URL }
+        .map { it to ui.options(it) }
     val total = groups.sumOf { it.second.size }
     val q = filter.trim()
     Page(ModelsCopy.roleName(role), onBack) {
@@ -235,7 +238,9 @@ fun RolePickerContent(ui: ModelSetupUi, role: ModelRole, actions: RolePickerActi
                         titleStyle = ModelIdStyle, below = { Tags(o, forVision = role == ModelRole.Vision) },
                     )
                 }
-                ManualModel(p, ui.manualPick[p.id], first = shown.isEmpty()) { actions.pickManual(p.id, it) }
+                // 端侧只能使用已经注册且通过启用测试的固定模型，不接受任意模型名。
+                if (p.baseUrl != LocalModelCatalog.BASE_URL)
+                    ManualModel(p, ui.manualPick[p.id], first = shown.isEmpty()) { actions.pickManual(p.id, it) }
             }
             val manualState = ui.manualPick[p.id]
             when {

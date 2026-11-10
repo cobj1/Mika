@@ -16,16 +16,30 @@ internal fun uprightDisplayFrame(
     paint: Paint = Paint(Paint.FILTER_BITMAP_FLAG),
 ): Bitmap {
     val (width, height) = geometry.previewSize(maxWidth)
+    return drawDisplayRegion(buffer, geometry, DisplayRegionPlan(geometry.width, geometry.height,
+        0, 0, geometry.width, geometry.height, width, height), paint)
+}
+
+/** 直接从物理缓冲画出旋转后的文字选区，只有最终有界区域分配 Bitmap。 */
+internal fun drawDisplayRegion(buffer: Bitmap, geometry: DisplayFrameGeometry, region: DisplayRegionPlan,
+    paint: Paint = Paint(Paint.FILTER_BITMAP_FLAG),
+): Bitmap {
+    require(region.sourceWidth == geometry.width && region.sourceHeight == geometry.height)
+    val width = region.width
+    val height = region.height
     val result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    Canvas(result).apply {
-        scale(width.toFloat() / geometry.width, height.toFloat() / geometry.height)
-        when (geometry.rotation) {
-            1 -> { translate(0f, geometry.bufferWidth.toFloat()); rotate(-90f) }
-            2 -> { translate(geometry.bufferWidth.toFloat(), geometry.bufferHeight.toFloat()); rotate(180f) }
-            3 -> { translate(geometry.bufferHeight.toFloat(), 0f); rotate(90f) }
+    try {
+        Canvas(result).apply {
+            scale(width.toFloat() / (region.right - region.left), height.toFloat() / (region.bottom - region.top))
+            translate(-region.left.toFloat(), -region.top.toFloat())
+            when (geometry.rotation) {
+                1 -> { translate(0f, geometry.bufferWidth.toFloat()); rotate(-90f) }
+                2 -> { translate(geometry.bufferWidth.toFloat(), geometry.bufferHeight.toFloat()); rotate(180f) }
+                3 -> { translate(geometry.bufferHeight.toFloat(), 0f); rotate(90f) }
+            }
+            val content = Rect(0, 0, geometry.bufferWidth, geometry.bufferHeight)
+            drawBitmap(buffer, content, content, paint)
         }
-        val content = Rect(0, 0, geometry.bufferWidth, geometry.bufferHeight)
-        drawBitmap(buffer, content, content, paint)
-    }
-    return result
+        return result
+    } catch (error: Throwable) { result.recycle(); throw error }
 }

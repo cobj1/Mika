@@ -3,6 +3,8 @@ package com.wangzan101.mika.core.model
 import com.wangzan101.mika.core.net.ProxyFailure
 
 sealed class ModelError(message: String, cause: Throwable? = null) : Exception(message, cause) {
+    /** 手机本机引擎/权重/资源错误，不建议检查账号或 Base URL，也不隐式切换云端。 */
+    class LocalUnavailable(val detail: String) : ModelError(detail)
     class Auth : ModelError("API Key 无效或没有权限")
     class QuotaExceeded : ModelError("额度已用完")
     class RateLimited(val retryAfterMs: Long?) : ModelError("请求太频繁,请稍后再试")

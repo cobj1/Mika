@@ -79,14 +79,18 @@ class ActionExecutor(
         // 不动屏幕的工具(沙箱一类):不进屏幕守卫,由各自的守卫另管
         val offScreen = tools.offScreen(call.name)
         val verb = tools.verb(call.name)
+        var pointerSucceeded = false
         // 用了另一块屏的编号的:不判不做、不记成在操作哪块屏,直接交给分发器说明该用哪个工具
         if (tools.misaimed(call.name, args) != null) {
-            return ran(Step(call, args, origin, emptyList(), writing = false, offScreen, verb, null, followUp, reads))
+            try { return ran(Step(call, args, origin, emptyList(), writing = false, offScreen, verb, null, followUp, reads)) }
+            finally { if (verb == Verb.PhoneTouch) releasePointers(call.name) }
         }
         // 之后的关卡、判定都按这次调用的那块屏(到这次调用结束)
         tools.aim(call.name, args)
         try {
-            return aimed(call, origin, followUp, reads, args, offScreen, verb)
+            return aimed(call, origin, followUp, reads, args, offScreen, verb).also { outcome ->
+                pointerSucceeded = outcome is ActionOutcome.Ran && outcome.exec.content["ok"] == JsonPrimitive(true)
+            }
         } catch (e: com.wangzan101.mika.core.access.AppAccessDenied) {
             val content = buildJsonObject {
                 put("ok", false); put("error", e.code); put("message", e.message); put("retryable", false)
@@ -97,6 +101,9 @@ class ActionExecutor(
             recorder.result(origin.step, call.name, verb, content, content, null, null, 0, origin.policy.source, call.id)
             return ActionOutcome.Refused(e.code, content, emptyList())
         } finally {
+            // 前置权限、审批、守卫拒绝以及执行失败/取消都可能发生在上一根手指仍按住时。
+            // 这条收尾只发送 CANCEL，绝不以 UP 代替，也不依赖当前协程仍可运行。
+            if (verb == Verb.PhoneTouch && !pointerSucceeded) releasePointers(call.name)
             // 成功与否由分发器记;这里只结束这一层
             tools.release(false)
         }
@@ -109,6 +116,10 @@ class ActionExecutor(
         var call = given
         var args = givenArgs
         var note: JsonObject? = null
+        // 仍走同一执行/记录入口，但释放不等待锁屏、审批、名单检查或页面读取。
+        // 仅接受这个工具的精确 cancel；down/move/up 和未知参数继续完整的普通路径。
+        if (pointerCancel(verb, args)) return ran(Step(call, args, origin, emptyList(), writing = false,
+            offScreen, verb, null, followUp, reads))
         tools.interfaces.checkAppAccess(tools.declared(call.name))
         when (val d = tools.interfaces.described(tools.declared(call.name), args)) {
             is Described.Failed -> return ran(Step(call, args, origin, emptyList(), writing = false, offScreen, verb, null, followUp, reads, preset = d.result))
@@ -216,7 +227,8 @@ class ActionExecutor(
         } else null
         val started = recorder.now()
         // 改状态的动作:记下执行前账本的位置,之后(含这次结果自带的那一屏)有没有重新读过由回答前的核对来看
-        val changes = tools.declaredRisk(call.name) != Risk.Read && (s.offScreen || ClassifiedRisk.changesState(s.verb))
+        val releaseOnly = pointerCancel(s.verb, s.args)
+        val changes = !releaseOnly && tools.declaredRisk(call.name) != Risk.Read && (s.offScreen || ClassifiedRisk.changesState(s.verb))
         val mark = tools.ledgerMark()
         val raw = (s.preset ?: offScreen?.exhausted(call.name)?.let { ToolExecution(it) } ?: execute(s, sub))
             .let { r -> s.note?.let { r.with(content = JsonObject(r.content + it)) } ?: r }
@@ -227,7 +239,7 @@ class ActionExecutor(
         if (changes && s.preset == null && !failed) recorder.noteChange(mark)
         val durationMs = recorder.now() - started
         val resolved = s.followUp.resolve(raw) ?: return ActionOutcome.Cancelled(s.before)
-        tools.interfaces.checkAppAccess(tools.declared(call.name), after = true)
+        if (!releaseOnly) tools.interfaces.checkAppAccess(tools.declared(call.name), after = true)
 
         val after = subVerdicts.toMutableList()
         after += if (s.offScreen) offScreen?.result(call.name, s.args, resolved.content).orEmpty() else guards.result(call.name, resolved.content)
@@ -267,6 +279,14 @@ class ActionExecutor(
         val seen = if (policy.routeTargets) routeTarget(call, s.verb, s.origin, exec) else null
         s.traced?.let { recorder.event(RunEvent.State(recorder.now(), "gate_unresolved", "${call.name} $it")) }
         return ActionOutcome.Ran(exec, s.before, after, content, durationMs, shotId.takeIf { picture != null }, picture, seen)
+    }
+
+    private fun pointerCancel(verb: Verb?, args: JsonObject): Boolean =
+        verb == Verb.PhoneTouch && args["op"] == JsonPrimitive("cancel")
+
+    private suspend fun releasePointers(tool: String) = withContext(NonCancellable) {
+        runCatching { tools.interfaces.cancelPointers(tools.declared(tool)) }
+        Unit
     }
 
     private suspend fun execute(s: Step, sub: SubActions?): ToolExecution {

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="local_mode_title">Pilih cara menjalankan AI</string>
+    <string name="local_mode_body">Jalankan model di ponsel ini atau hubungkan layanan online. Anda bisa mengubahnya nanti di Setelan.</string>
+    <string name="local_model_title">Model di ponsel</string>
+    <string name="local_model_entry">Unduh, periksa, dan aktifkan model utama lokal</string>
+    <string name="local_mode_local_body">Unduh model lalu jalankan di ponsel ini tanpa kunci API.</string>
+    <string name="local_mode_local">Pilih model lokal</string>
+    <string name="local_mode_online">Gunakan model online</string>
+    <string name="local_mode_online_body">Masuk atau isi informasi API untuk menghubungkan layanan model.</string>
+    <string name="local_model_intro">Hanya model pilihan Anda yang diunduh. Setelah verifikasi, ketuk Gunakan sebagai model utama; Mika akan mengujinya sebelum beralih. Model ringan juga dialihkan ke lokal dan model visual online dimatikan. Anda bisa mengubahnya nanti di setelan model.</string>
+    <string name="local_model_limits">Model teks memakai teks, kontrol layar, dan OCR, bukan pemahaman gambar langsung. Model kecil memakai lebih sedikit sumber daya. Kualitas dan kecepatan tugas kompleks perlu diuji di ponsel. Inferensi lokal tidak memerlukan opsi developer; mengoperasikan aplikasi perlu pengaturan terpisah.</string>
+    <string name="local_model_activating">Menguji model lokal…</string>
+    <string name="local_model_size">Unduhan: %1$s</string>
+    <string name="local_model_recommended">Disarankan untuk sumber daya saat ini</string>
+    <string name="local_model_current">Model utama saat ini</string>
+    <string name="local_model_use">Gunakan sebagai model utama</string>
+    <string name="local_model_leave_note">Keluar menjeda unduhan atau menghentikan pengaturan. Unduhan sebagian dapat dilanjutkan.</string>
+    <string name="local_error_unsupported">Perangkat ini tidak mendukung runtime lokal.</string>
+    <string name="local_error_memory">Memori tersedia tidak cukup. Tutup aplikasi lain dan coba lagi.</string>
+    <string name="local_error_storage">Penyimpanan tidak cukup. Kosongkan ruang dan coba lagi.</string>
+    <string name="local_error_download">Unduhan gagal. Periksa koneksi; data sebagian tetap disimpan.</string>
+    <string name="local_error_integrity">Verifikasi model gagal. Unduh ulang model.</string>
+    <string name="local_error_runtime">Model lokal tidak dapat dijalankan. Coba lagi atau pilih model lain.</string>
+    <string name="local_error_timeout">Waktu model lokal habis. Coba lagi atau pilih model lebih kecil.</string>
+    <string name="local_error_busy">Operasi model lokal sedang berjalan. Coba sebentar lagi.</string>
+    <string name="local_error_active_delete">Beralih ke model utama lain sebelum menghapus model ini.</string>
+    <string name="local_error_model_missing">Unduh dan verifikasi model ini terlebih dahulu.</string>
+</resources>

@@ -20,7 +20,7 @@ class ToolRiskTest {
 
     /** 原来要过锁屏/暂停关卡的工具表。 */
     private val oldWriting = both("tap", "scroll", "swipe", "type_text", "clear_text", "back", "press_key", "diagnose") + setOf(
-        "phone_launch_app", "phone_share_text", "phone_gesture", "hand_to_user",
+        "phone_launch_app", "phone_share_text", "phone_gesture", "phone_touch", "hand_to_user",
         "phone_set_alarm", "phone_set_timer", "phone_show_alarms", "phone_add_calendar_event", "phone_set_wheel",
         "web_navigate", "web_tabs", "web_upload", "web_interact", "web_site_mode", "phone_open_link", "web_keep_open", "phone_app_after_task",
     )
@@ -58,7 +58,7 @@ class ToolRiskTest {
 
     @Test fun externalToolsDeclareHowTheirTargetIsJudged() {
         for (t in allTools()) assertEquals(t.name, t.risk == Risk.External, t.gateTarget != null || t.approvalRisk != null)
-        assertEquals(both("tap", "type_text", "press_key", "swipe", "scroll") + setOf("web_interact", "web_upload", "schedule_task"),
+        assertEquals(both("tap", "type_text", "press_key", "swipe", "scroll") + setOf("phone_touch", "web_interact", "web_upload", "schedule_task"),
             allTools().filter { it.risk == Risk.External }.map { it.name }.toSet())
     }
 
@@ -69,7 +69,7 @@ class ToolRiskTest {
     @Test fun gateTargetsMatchOldNameBranches() {
         val perVerb = mapOf("tap" to GateTarget.Tap, "type_text" to GateTarget.Enter, "press_key" to GateTarget.Key, "swipe" to GateTarget.Swipe, "scroll" to GateTarget.Swipe)
         val old = perVerb.flatMap { (v, g) -> listOf("phone_$v" to g, "web_$v" to g) }.toMap() +
-            mapOf("web_upload" to GateTarget.FileControl, "web_interact" to GateTarget.Interact)
+            mapOf("phone_touch" to GateTarget.Pointer, "web_upload" to GateTarget.FileControl, "web_interact" to GateTarget.Interact)
         for (t in allTools().map { it.name } + "do_steps" + "unknown") assertEquals(t, old[t], gateTargetOf(t))
     }
 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="local_mode_title">Выберите способ работы ИИ</string>
+    <string name="local_mode_body">Запустите модель на телефоне или подключите онлайн-сервис. Позже выбор можно изменить в настройках.</string>
+    <string name="local_model_title">Модели на телефоне</string>
+    <string name="local_model_entry">Загрузка, проверка и включение локальной основной модели</string>
+    <string name="local_mode_local_body">Загрузите модель и запускайте её на телефоне без ключа API.</string>
+    <string name="local_mode_local">Выбрать локальную модель</string>
+    <string name="local_mode_online">Использовать онлайн-модель</string>
+    <string name="local_mode_online_body">Войдите в аккаунт или укажите API для подключения сервиса.</string>
+    <string name="local_model_intro">Загружается только выбранная модель. После проверки нажмите Сделать основной; Mika проверит запуск перед переключением. Лёгкая модель тоже станет локальной, а онлайн-модель для изображений отключится. Позже это можно изменить в настройках моделей.</string>
+    <string name="local_model_limits">Текстовые модели используют текст, элементы экрана и OCR, но не понимают изображения напрямую. Небольшие модели требуют меньше ресурсов. Качество и скорость сложных задач нужно проверить на телефоне. Локальному ИИ не нужен режим разработчика; для управления приложениями требуется отдельная настройка.</string>
+    <string name="local_model_activating">Проверка локальной модели…</string>
+    <string name="local_model_size">Загрузка: %1$s</string>
+    <string name="local_model_recommended">Рекомендуется по доступным ресурсам</string>
+    <string name="local_model_current">Текущая основная модель</string>
+    <string name="local_model_use">Сделать основной</string>
+    <string name="local_model_leave_note">При выходе загрузка или настройка приостанавливается. Частичную загрузку можно продолжить.</string>
+    <string name="local_error_unsupported">Устройство не поддерживает локальный движок.</string>
+    <string name="local_error_memory">Недостаточно свободной памяти. Закройте другие приложения и повторите.</string>
+    <string name="local_error_storage">Недостаточно места. Освободите место и повторите.</string>
+    <string name="local_error_download">Ошибка загрузки. Проверьте соединение; загруженная часть сохранена.</string>
+    <string name="local_error_integrity">Проверка модели не пройдена. Загрузите её заново.</string>
+    <string name="local_error_runtime">Не удалось запустить модель. Повторите или выберите другую.</string>
+    <string name="local_error_timeout">Время ожидания истекло. Повторите или выберите меньшую модель.</string>
+    <string name="local_error_busy">Уже выполняется операция с локальной моделью. Подождите.</string>
+    <string name="local_error_active_delete">Перед удалением выберите другую основную модель.</string>
+    <string name="local_error_model_missing">Сначала загрузите и проверьте модель.</string>
+</resources>

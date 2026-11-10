@@ -5,6 +5,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
 /** 卡片上的小画面每秒最多几张。 */
 const val PREVIEW_FPS = 5
@@ -22,6 +29,15 @@ fun <T : Any> Flow<T>.previewFrames(intervalMs: Long = 1_000L / PREVIEW_FPS, sam
         emit(f)
         delay(intervalMs)
     }
+}
+
+/** null 是立即撤销：取消排队帧并重置去重，恢复同一张静态图时仍会重新发布。 */
+@OptIn(ExperimentalCoroutinesApi::class)
+fun <T : Any> StateFlow<T?>.revocablePreviewFrames(
+    intervalMs: Long = 1_000L / PREVIEW_FPS,
+    same: (T, T) -> Boolean = { a, b -> a === b },
+): Flow<T?> = map { it == null }.distinctUntilChanged().flatMapLatest { hidden ->
+    if (hidden) flowOf(null) else filterNotNull().previewFrames(intervalMs, same)
 }
 
 /**

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_advanced_title">解鎖進階手機操作</string>
+    <string name="setup_advanced_intro">進入精靈，設定開發人員選項、USB 偵錯、無線偵錯和配對。此設定不需要呼叫大型語言模型。</string>
+    <string name="setup_advanced_ready">進階手機操作已啟用</string>
+    <string name="setup_advanced_ready_body">無障礙服務和手機助手均已連線。可在下方查看狀態或重新配對。</string>
+</resources>

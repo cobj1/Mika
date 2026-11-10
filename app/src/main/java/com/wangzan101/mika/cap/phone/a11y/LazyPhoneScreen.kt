@@ -74,8 +74,13 @@ class LazyPhoneScreen(
 
     override suspend fun snapshot(): ScreenSnapshot = port?.snapshot() ?: empty()
     override suspend fun peek(): ScreenSnapshot = port?.peek() ?: empty()
+    override suspend fun viewport() = port?.viewport() ?: com.wangzan101.mika.core.uistate.ScreenViewport(width, height, false)
     override suspend fun screenshotPng(): ByteArray? = port?.screenshotPng()
+    override suspend fun observationFrame(afterNanos: Long, shouldEncode: (com.wangzan101.mika.core.visual.FramePreview) -> Boolean) =
+        port?.observationFrame(afterNanos, shouldEncode)
     override suspend fun readVisibleText(): List<VisibleTextLine>? = port?.readVisibleText()
+    override suspend fun verifyText(text: String?, region: List<Int>) = port?.verifyText(text, region)
+        ?: com.wangzan101.mika.core.uistate.TextVerification(region = region, error = "no_app_open", message = "当前还没有打开手机应用。")
     override suspend fun tapRef(ref: String, snapshotId: String) = port?.tapRef(ref, snapshotId) ?: NO_APP_OPEN
     override suspend fun tapXY(x: Int, y: Int) = port?.tapXY(x, y) ?: NO_APP_OPEN
     override suspend fun doubleTapRef(ref: String, snapshotId: String) = port?.doubleTapRef(ref, snapshotId) ?: NO_APP_OPEN
@@ -88,6 +93,7 @@ class LazyPhoneScreen(
     override suspend fun swipe(x1: Int, y1: Int, x2: Int, y2: Int, durationMs: Long) = port?.swipe(x1, y1, x2, y2, durationMs) ?: NO_APP_OPEN
     override suspend fun idleScroll(fraction: Double): Boolean = port?.idleScroll(fraction) ?: false
     override suspend fun gesture(paths: List<List<Pair<Int, Int>>>, durationMs: Long) = port?.gesture(paths, durationMs) ?: NO_APP_OPEN
+    override suspend fun pointer(op: String, pointerId: Int, x: Int, y: Int) = port?.pointer(op, pointerId, x, y) ?: NO_APP_OPEN
     override suspend fun back() = port?.back() ?: NO_APP_OPEN
     override suspend fun pressKey(keyCode: Int) = port?.pressKey(keyCode) ?: NO_APP_OPEN
     override suspend fun waitStable(timeoutMs: Long) = port?.waitStable(timeoutMs) ?: true

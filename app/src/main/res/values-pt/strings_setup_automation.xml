@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_auto_title">Configuração automática</string>
+    <string name="setup_auto_start">Iniciar configuração automática</string>
+    <string name="setup_auto_stop">Parar</string>
+    <string name="setup_auto_intro">Primeiro, ative manualmente o serviço de acessibilidade da Mika. Depois, a Mika ativará as opções do desenvolvedor, a depuração USB e a depuração sem fio e fará o pareamento. Digite a senha de bloqueio e confirme os avisos do sistema manualmente.</string>
+    <string name="setup_auto_enable_accessibility">Ative manualmente o serviço de acessibilidade da Mika nas configurações do sistema. A configuração continuará automaticamente quando o serviço se conectar.</string>
+    <string name="setup_auto_developer">Ativando as opções do desenvolvedor…</string>
+    <string name="setup_auto_usb">Ativando a depuração USB…</string>
+    <string name="setup_auto_wireless">Abrindo a depuração sem fio…</string>
+    <string name="setup_auto_pairing">Abrindo a janela de pareamento. A Mika lerá o código e fará o pareamento automaticamente.</string>
+    <string name="setup_auto_confirm">Conclua a confirmação ou verificação de identidade na tela do sistema. A configuração continuará automaticamente em seguida.</string>
+    <string name="setup_auto_manual">A configuração automática foi pausada. Volte à Mika para concluir os passos manualmente ou tente novamente.</string>
+    <string name="setup_auto_stopped">Configuração automática interrompida. Você pode continuar manualmente ou começar de novo.</string>
+    <string name="setup_auto_done">A configuração do controle do celular foi concluída.</string>
+</resources>

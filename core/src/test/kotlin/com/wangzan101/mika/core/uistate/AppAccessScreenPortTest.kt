@@ -99,6 +99,29 @@ class AppAccessScreenPortTest {
         denied("app_blocked") { screen.screenshotPng() }
     }
 
+    @Test fun observationChecksAccessBeforeSelectionAndAfterSkippedEncoding() = runTest {
+        var pkg = "bank"
+        var captures = 0
+        var selections = 0
+        val inner = object : ScreenPort by FakeScreen() {
+            override suspend fun observationFrame(afterNanos: Long, shouldEncode: (com.wangzan101.mika.core.visual.FramePreview) -> Boolean): com.wangzan101.mika.core.visual.ObservedFrame? {
+                captures++
+                val accepted = shouldEncode(com.wangzan101.mika.core.visual.FramePreview(10, 320, 640, null))
+                assertFalse(accepted)
+                pkg = "bank"
+                return null
+            }
+        }
+        val screen = AppAccessScreenPort(inner, blocked(), packages = { listOf(pkg) })
+        denied("app_blocked") { screen.observationFrame(0) { selections++; false } }
+        assertEquals(0, captures)
+        assertEquals(0, selections)
+        pkg = "allowed"
+        denied("app_blocked") { screen.observationFrame(0) { selections++; false } }
+        assertEquals(1, captures)
+        assertEquals(1, selections)
+    }
+
     @Test fun canLeaveBlockedAppButCannotLaunchBlockedTarget() = runTest {
         val screen = AppAccessScreenPort(FakeScreen(), blocked(), packages = { listOf("bank") })
         screen.openApp("allowed")
@@ -152,6 +175,7 @@ class AppAccessScreenPortTest {
                 Int::class.javaObjectType -> null
                 List::class.java -> emptyList<Any>()
                 SystemAction::class.java -> SystemAction.ShowAlarms
+                kotlin.jvm.functions.Function1::class.java -> { _: Any? -> true }
                 Continuation::class.java -> Continuation<Any?>(EmptyCoroutineContext) {}
                 else -> error("no sample for ${t.name} in ${m.name}: add one")
             }

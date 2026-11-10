@@ -39,7 +39,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.wangzan101.mika.R
 import com.wangzan101.mika.cap.phone.PhoneServices
-import com.wangzan101.mika.capsule.previewFrames
+import com.wangzan101.mika.capsule.revocablePreviewFrames
 import com.wangzan101.mika.capsule.sameFrame
 import com.wangzan101.mika.confirm.ConfirmationNotifier
 import com.wangzan101.mika.core.agent.TaskState
@@ -56,8 +56,8 @@ import com.wangzan101.mika.ui.theme.MikaTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.withContext
+import androidx.lifecycle.compose.LifecycleStartEffect
 
 /**
  * 这一页列的一个任务和它的虚拟屏:[displayId] 为 -1 是还没建屏(排队中,或者纯对话、还没打开过 App)。
@@ -116,6 +116,7 @@ fun ScreensScreen(taskState: TaskCenterState, onBack: () -> Unit, onOpenConversa
         onBack = onBack,
         onOpenConversation = onOpenConversation,
         frames = { key -> runs.firstOrNull { it.key == key }?.frames },
+        retainPreview = { key -> runs.firstOrNull { it.key == key }?.retainPreview() },
     )
 }
 
@@ -129,20 +130,23 @@ fun ScreensContent(
     onBack: () -> Unit,
     onOpenConversation: (String) -> Unit,
     frames: (String) -> StateFlow<Bitmap?>? = { null },
+    retainPreview: (String) -> AutoCloseable? = { null },
 ) {
     PageScaffold(ScreensCopy.TITLE, onBack) {
         if (rows.isEmpty()) {
             EmptyNote(ScreensCopy.EMPTY)
             return@PageScaffold
         }
-        rows.forEach { row -> ScreenCard(row, frames(row.key), onOpenConversation) }
+        rows.forEach { row -> ScreenCard(row, frames(row.key), onOpenConversation) { retainPreview(row.key) } }
         FooterNote(ScreensCopy.NOTE)
     }
 }
 
 /** 一个任务:在做什么、正在用哪个 App、状态;点这一行回到它的对话,点「看画面」展开实时画面。 */
 @Composable
-private fun ScreenCard(row: ScreenRow, frames: StateFlow<Bitmap?>?, onOpenConversation: (String) -> Unit) {
+private fun ScreenCard(row: ScreenRow, frames: StateFlow<Bitmap?>?, onOpenConversation: (String) -> Unit,
+    retainPreview: () -> AutoCloseable?,
+) {
     val c = MikaTheme.colors
     var open by rememberSaveable(row.key) { mutableStateOf(false) }
     GroupCard(Modifier.padding(top = 8.dp)) {
@@ -157,18 +161,22 @@ private fun ScreenCard(row: ScreenRow, frames: StateFlow<Bitmap?>?, onOpenConver
                     .clickable { open = !open }.testTag("screens-preview-${row.key}"),
                 fontSize = 13.sp, color = c.accent,
             )
-            if (open && frames != null) LiveFrame(frames)
+            if (open && frames != null) LiveFrame(frames, retainPreview)
         }
     }
 }
 
 /**
- * 这块屏的实时画面:每秒最多 5 张,和上一张一样就不换(见 [previewFrames])。收起时不订阅。
+ * 这块屏的实时画面:每秒最多 5 张，撤销立即清屏。收起时不订阅。
  * 点一下放大到整屏,可以捏合缩放、拖动——字小的界面在这一小块里看不清。
  */
 @Composable
-private fun LiveFrame(source: StateFlow<Bitmap?>) {
-    val frames = remember(source) { source.filterNotNull().previewFrames(same = ::sameFrame) }
+private fun LiveFrame(source: StateFlow<Bitmap?>, retainPreview: () -> AutoCloseable?) {
+    LifecycleStartEffect(source) {
+        val lease = retainPreview()
+        onStopOrDispose { lease?.close() }
+    }
+    val frames = remember(source) { source.revocablePreviewFrames(same = ::sameFrame) }
     val frame by frames.collectAsState(initial = null)
     val bmp = frame ?: return
     var zoom by remember { mutableStateOf(false) }

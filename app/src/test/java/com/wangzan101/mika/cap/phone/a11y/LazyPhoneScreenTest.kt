@@ -42,6 +42,7 @@ class LazyPhoneScreenTest {
 
     @Test fun readsAndAppListWorkWithoutConnecting() = runTest {
         assertFalse(screen.snapshot().hasWindow)
+        assertEquals(com.wangzan101.mika.core.uistate.ScreenViewport(1080, 2400, false), screen.viewport())
         assertEquals(listOf("a.b" to "A"), screen.listApps())
         assertEquals(ActionResult.Failed("no_app_open"), screen.tapXY(1, 1))
         assertEquals(0, attempts)

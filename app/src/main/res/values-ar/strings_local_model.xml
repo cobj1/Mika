@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="local_mode_title">اختر طريقة تشغيل الذكاء الاصطناعي</string>
+    <string name="local_mode_body">شغّل نموذجًا على هذا الهاتف أو اتصل بخدمة عبر الإنترنت. يمكنك تغيير الاختيار لاحقًا في الإعدادات.</string>
+    <string name="local_model_title">نماذج على الهاتف</string>
+    <string name="local_model_entry">تنزيل نموذج رئيسي محلي والتحقق منه وتفعيله</string>
+    <string name="local_mode_local_body">نزّل نموذجًا ثم شغّله على هذا الهاتف دون مفتاح API.</string>
+    <string name="local_mode_local">اختيار نموذج محلي</string>
+    <string name="local_mode_online">استخدام نموذج عبر الإنترنت</string>
+    <string name="local_mode_online_body">سجّل الدخول أو أدخل معلومات API للاتصال بخدمة نماذج.</string>
+    <string name="local_model_intro">يُنزّل النموذج الذي تختاره فقط. بعد التحقق اضغط استخدام كنموذج رئيسي؛ ستختبره Mika قبل التبديل. سيُضبط النموذج الخفيف أيضًا على المحلي ويُوقف نموذج الصور عبر الإنترنت. يمكنك تغيير ذلك لاحقًا في إعدادات النماذج.</string>
+    <string name="local_model_limits">تستخدم النماذج النصية النص وعناصر الشاشة وOCR، ولا تفهم الصور مباشرة. النماذج الصغيرة تستهلك موارد أقل. تحتاج جودة المهام المعقدة وسرعتها إلى اختبار على هاتفك. لا يتطلب الاستدلال المحلي خيارات المطوّر، لكن التحكم بالتطبيقات يحتاج إعدادًا منفصلًا.</string>
+    <string name="local_model_activating">جارٍ اختبار النموذج المحلي…</string>
+    <string name="local_model_size">حجم التنزيل: %1$s</string>
+    <string name="local_model_recommended">مقترح حسب الموارد الحالية</string>
+    <string name="local_model_current">النموذج الرئيسي الحالي</string>
+    <string name="local_model_use">استخدام كنموذج رئيسي</string>
+    <string name="local_model_leave_note">تؤدي المغادرة إلى إيقاف التنزيل أو الإعداد. يمكن استئناف التنزيل الجزئي.</string>
+    <string name="local_error_unsupported">هذا الجهاز لا يدعم بيئة التشغيل المحلية.</string>
+    <string name="local_error_memory">الذاكرة المتاحة غير كافية. أغلق التطبيقات الأخرى وأعد المحاولة.</string>
+    <string name="local_error_storage">مساحة التخزين غير كافية. أفرغ مساحة وأعد المحاولة.</string>
+    <string name="local_error_download">فشل التنزيل. تحقق من الاتصال؛ تُحفظ البيانات الجزئية.</string>
+    <string name="local_error_integrity">فشل التحقق من النموذج. نزّله مرة أخرى.</string>
+    <string name="local_error_runtime">تعذر تشغيل النموذج المحلي. أعد المحاولة أو اختر نموذجًا آخر.</string>
+    <string name="local_error_timeout">انتهت مهلة النموذج المحلي. أعد المحاولة أو اختر نموذجًا أصغر.</string>
+    <string name="local_error_busy">هناك عملية نموذج محلي قيد التنفيذ. حاول بعد قليل.</string>
+    <string name="local_error_active_delete">اختر نموذجًا رئيسيًا آخر قبل حذف هذا النموذج.</string>
+    <string name="local_error_model_missing">نزّل هذا النموذج وتحقق منه أولًا.</string>
+</resources>

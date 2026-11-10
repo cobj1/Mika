@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jev_title">OCR result check</string>
+    <string name="jev_intro">Jev compares recognized text with its original image. It runs on this phone and does not replace your chat model.</string>
+    <string name="jev_download_note">Optional download: about 1.95 GB. Images and text stay on this phone during checking.</string>
+    <string name="jev_download">Download / resume</string>
+    <string name="jev_stop">Stop</string>
+    <string name="jev_remove">Delete model</string>
+    <string name="jev_remove_confirm">Delete the downloaded model files? You can download them again later.</string>
+    <string name="jev_ready">Model is ready</string>
+    <string name="jev_downloading">Downloading model…</string>
+    <string name="jev_verifying">Checking downloaded files…</string>
+    <string name="jev_loading">Loading model…</string>
+    <string name="jev_scoring">Checking text…</string>
+    <string name="jev_progress">%1$d%%</string>
+    <string name="jev_leave_note">Leaving this page pauses downloading or stops checking. Incomplete downloads can be resumed.</string>
+    <string name="jev_input_title">Check a text region</string>
+    <string name="jev_crop_hint">Choose an image of one line or paragraph, or crop it with the edge sliders below. Paste the OCR text. Tables and formulas are not supported.</string>
+    <string name="jev_choose_image">Choose image</string>
+    <string name="jev_image_selected">Image selected</string>
+    <string name="jev_text_label">OCR text</string>
+    <string name="jev_text_count">%1$d / %2$d</string>
+    <string name="jev_score">Check on this phone</string>
+    <string name="jev_score_value">Consistency score: %1$s</string>
+    <string name="jev_score_note">Higher scores mean the text is more likely to match the image. This score has not been calibrated for this phone and OCR input; it is not proof that a phone action succeeded.</string>
+    <string name="jev_download_error">Download failed. Check your network and try again; downloaded parts are kept.</string>
+    <string name="jev_integrity_error">Model files did not pass verification. Please download them again.</string>
+    <string name="jev_no_space">Not enough storage. Free up space and try again.</string>
+    <string name="jev_memory_low">Not enough available memory. Close other apps and try again.</string>
+    <string name="jev_runtime_error">The checking engine could not run. Please try again.</string>
+    <string name="jev_image_error">The selected image could not be read. Please choose another image.</string>
+    <string name="jev_input_error">Choose a text-region image and enter 1–1000 characters of OCR text.</string>
+    <string name="jev_timeout">Checking timed out. Try a smaller image or shorter text.</string>
+    <string name="jev_unavailable">Local Jev checking is not supported on this device.</string>
+    <string name="jev_cached">Reused a recent result from this visit to the page; the model was not loaded again.</string>
+    <string name="jev_timing">Loading %1$s s · Scoring %2$s s</string>
+    <string name="jev_crop_horizontal">Left and right edges</string>
+    <string name="jev_crop_vertical">Top and bottom edges</string>
+    <string name="jev_crop_reset">Restore full image</string>
+    <string name="jev_text_layout_error">There are too many lines. Use one line or paragraph of text.</string>
+    <string name="jev_device_ready">Current resources pass the initial checks. Actual performance must be assessed on this phone.</string>
+    <string name="jev_busy">Another local text check is running. Please try again later.</string>
+    <string name="jev_recheck">Check device again</string>
+    <string name="jev_read_image">Read text from selected region</string>
+    <string name="jev_ocr_empty">No usable text was recognized. Adjust the region or enter text manually.</string>
+    <string name="jev_crop_detail">Selected region</string>
+</resources>

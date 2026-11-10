@@ -3,6 +3,7 @@ package com.wangzan101.mika.core.action
 import com.wangzan101.mika.core.gate.ConfirmationGate
 import com.wangzan101.mika.core.gate.ConfirmationRequest
 import com.wangzan101.mika.core.risk.IrrevAction
+import com.wangzan101.mika.core.risk.GateTarget
 import com.wangzan101.mika.core.gate.Irreversible
 import com.wangzan101.mika.core.gate.IrreversibleDetector
 import com.wangzan101.mika.core.gate.Permit
@@ -62,6 +63,8 @@ class ConfirmDecision(
     /** 判定放在锁屏等待之后:按此刻重新读的一屏判。 */
     suspend fun judge(tool: String, args: JsonObject, origin: Origin): Decision {
         outwardSite = null
+        // 精确取消不读目标、不点击，也不能被当前页面或确认关卡挡住。
+        if (tools.gateTarget(tool) == GateTarget.Pointer && args["op"] == JsonPrimitive("cancel")) return Decision.Clear
         if (autonomous || approvals.autonomous()) {
             val target = tools.gateTarget(tool)
             if (IrreversibleDetector.needsCheck(target, args)) {

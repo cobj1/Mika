@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="local_mode_title">AI の実行方法を選ぶ</string>
+    <string name="local_mode_body">この端末でモデルを動かすか、オンラインサービスに接続します。後で設定から変更できます。</string>
+    <string name="local_model_title">端末内モデル</string>
+    <string name="local_model_entry">ローカルのメインモデルをダウンロード・確認・有効化</string>
+    <string name="local_mode_local_body">モデルをダウンロードすると、この端末で実行できます。API キーは不要です。</string>
+    <string name="local_mode_local">端末内モデルを選ぶ</string>
+    <string name="local_mode_online">オンラインモデルを使う</string>
+    <string name="local_mode_online_body">ログインまたは API 情報の入力でモデルサービスに接続します。</string>
+    <string name="local_model_intro">選んだモデルだけをダウンロードします。検証後に「メインモデルにする」を押すと、Mika が試運転し、成功後に切り替えます。軽量モデルも端末内モデルに切り替え、オンラインの画像モデルを無効にします。後でモデル設定から変更できます。</string>
+    <string name="local_model_limits">テキストモデルは文字、画面の操作要素、OCR を使い、画像自体は理解しません。小さいモデルは必要な資源が少なく、複雑な操作の品質や速度は端末での検証が必要です。推論に開発者向け設定は不要ですが、他のアプリの操作には別途設定が必要です。</string>
+    <string name="local_model_activating">端末内モデルをテスト中…</string>
+    <string name="local_model_size">ダウンロード容量：%1$s</string>
+    <string name="local_model_recommended">現在の資源に基づく推奨</string>
+    <string name="local_model_current">現在のメインモデル</string>
+    <string name="local_model_use">メインモデルにする</string>
+    <string name="local_model_leave_note">この画面を閉じるとダウンロードや設定が停止します。途中のダウンロードは再開できます。</string>
+    <string name="local_error_unsupported">この端末はローカル実行環境に対応していません。</string>
+    <string name="local_error_memory">空きメモリが不足しています。他のアプリを閉じて再試行してください。</string>
+    <string name="local_error_storage">空き容量が不足しています。容量を確保して再試行してください。</string>
+    <string name="local_error_download">ダウンロードに失敗しました。接続を確認してください。途中のデータは保持されます。</string>
+    <string name="local_error_integrity">モデルの検証に失敗しました。再ダウンロードしてください。</string>
+    <string name="local_error_runtime">モデルを実行できません。再試行するか別のモデルを選んでください。</string>
+    <string name="local_error_timeout">モデルの処理がタイムアウトしました。再試行するか小さいモデルを選んでください。</string>
+    <string name="local_error_busy">別のローカルモデル操作を実行中です。少し待ってください。</string>
+    <string name="local_error_active_delete">削除前に別のメインモデルへ切り替えてください。</string>
+    <string name="local_error_model_missing">先にモデルをダウンロードして検証してください。</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_advanced_title">解锁高级手机操作</string>
+    <string name="setup_advanced_intro">进入向导，设置开发者选项、USB 调试、无线调试和配对。此设置不需要调用大模型。</string>
+    <string name="setup_advanced_ready">高级手机操作已启用</string>
+    <string name="setup_advanced_ready_body">无障碍服务和手机助手均已连接。可在下方查看状态或重新配对。</string>
+</resources>

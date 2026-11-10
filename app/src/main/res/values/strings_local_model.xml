@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="local_mode_title">Choose how AI runs</string>
+    <string name="local_mode_body">Choose a model on this phone or connect an online service. You can change this later in Settings.</string>
+    <string name="local_model_title">Models on this phone</string>
+    <string name="local_model_entry">Download, check and use a local main model</string>
+    <string name="local_mode_local_body">Download a model first, then run it on this phone without an API key.</string>
+    <string name="local_mode_local">Choose a local model</string>
+    <string name="local_mode_online">Use an online model</string>
+    <string name="local_mode_online_body">Sign in or enter API details to connect a model service.</string>
+    <string name="local_model_intro">Only download the model you choose. After verification, tap Use as main model; Mika tests it before switching. This also sets the light model to local and turns off the online vision model. You can change these choices later.</string>
+    <string name="local_model_limits">Text models use text, screen controls and OCR, not image understanding. Smaller models use fewer resources; complex task quality and speed need testing on your phone. Local inference needs no developer options, but operating apps needs separate setup.</string>
+    <string name="local_model_activating">Testing the local model…</string>
+    <string name="local_model_size">Download: %1$s</string>
+    <string name="local_model_recommended">Suggested for current resources</string>
+    <string name="local_model_current">Current main model</string>
+    <string name="local_model_use">Use as main model</string>
+    <string name="local_model_leave_note">Leaving pauses downloads or stops setup. Partial downloads can resume.</string>
+    <string name="local_error_unsupported">This device does not support the local runtime.</string>
+    <string name="local_error_memory">Not enough available memory. Close other apps and try again.</string>
+    <string name="local_error_storage">Not enough storage. Free space and try again.</string>
+    <string name="local_error_download">Download failed. Check the connection and retry; partial data is kept.</string>
+    <string name="local_error_integrity">Model verification failed. Download the model again.</string>
+    <string name="local_error_runtime">The local model could not run. Retry or choose another model.</string>
+    <string name="local_error_timeout">The local model timed out. Retry or choose a smaller model.</string>
+    <string name="local_error_busy">A local model operation is already running. Try again shortly.</string>
+    <string name="local_error_active_delete">Choose another main model before deleting this model.</string>
+    <string name="local_error_model_missing">Download and verify this model first.</string>
+</resources>

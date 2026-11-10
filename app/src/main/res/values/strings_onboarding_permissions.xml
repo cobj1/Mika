@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_access_title">Enable accessibility first</string>
+    <string name="onboarding_access_body">Turn on Mika in your system Accessibility settings so it can read the interface and operate apps for you. You choose whether to grant access. After this, configure your AI model; advanced phone control can be enabled later.</string>
+    <string name="onboarding_access_open">Enable accessibility</string>
+    <string name="onboarding_access_continue">Continue to model setup</string>
+    <string name="onboarding_access_connected">Mika accessibility is connected.</string>
+    <string name="onboarding_access_app_info">Cannot enable it? Open App info to allow restricted settings.</string>
+    <string name="onboarding_later">Later</string>
+    <string name="onboarding_advanced_title">Unlock advanced features</string>
+    <string name="onboarding_advanced_body">Let Mika operate apps on a separate background screen. Tap below to start guided setup of Developer options, USB debugging, Wireless debugging and pairing. Chat, web and file tasks are available without this step.</string>
+    <string name="onboarding_advanced_enable">Unlock advanced features</string>
+    <string name="onboarding_advanced_confirmation">This setup is free and optional. You still enter the screen-lock password and confirm system prompts yourself.</string>
+    <string name="onboarding_model_saved">Model saved</string>
+</resources>

@@ -54,6 +54,7 @@ class SettingsScreenTest {
                 status = status, androidRelease = "14", mainModel = mainModel, onBack = {}, onProblem = onProblem,
                 onOpenModels = { opened += "models" }, onOpenPhoneOps = { opened += "phone" }, onOpenDuringWork = { opened += "work" },
                 onOpenWechat = { opened += "wechat" },
+                onOpenPhoneSetup = { opened += "phone-setup" },
                 capsuleMode = CapsuleMode.DuringTasks, onOpenCapsule = { opened += "capsule" }, onOpenNotifications = { opened += "notifications" },
                 onOpenLanguage = { opened += "language" }, onOpenAppAccess = { opened += "access" },
                 onOpenMemory = { opened += "memory" }, onOpenAdvanced = { opened += "advanced" },
@@ -89,6 +90,32 @@ class SettingsScreenTest {
             compose.onNodeWithText(t).performClick()
         }
         assertEquals(listOf("models", "phone", "wechat", "work", "capsule", "language", "notifications", "memory", "access", "advanced", "about"), opened)
+    }
+
+    @Test fun advancedPhoneEntryWorksWithoutAnyModelAndDoesNotRunOnOpeningSettings() {
+        val opened = mutableListOf<String>()
+        home(status = ready.copy(builtinShell = BuiltinShellStatus.NotPaired), mainModel = null, opened = opened)
+        compose.waitForIdle()
+        assertEquals(emptyList<String>(), opened)
+        scrollTo("解锁高级手机操作")
+        compose.onNodeWithText("解锁高级手机操作").performClick()
+        assertEquals(listOf("phone-setup"), opened)
+    }
+
+    @Test fun alreadyReadyPhoneDoesNotOfferUnlockAgain() {
+        home()
+        compose.onNodeWithText("解锁高级手机操作").assertDoesNotExist()
+    }
+
+    @Test fun phoneOperationsSubpageCanStartNormalSetupWithoutRepairingPairing() {
+        val opened = mutableListOf<String>()
+        compose.setContent {
+            PhoneOpsScreen(ready.copy(builtinShell = BuiltinShellStatus.NotPaired), "14", {},
+                onRepair = { opened += "repair" }, onUnpair = { opened += "unpair" }, onBack = {},
+                onSetup = { opened += "setup" })
+        }
+        compose.onNodeWithText("解锁高级手机操作").performScrollTo().performClick()
+        assertEquals(listOf("setup"), opened)
     }
 
     /** 高级与其他集中放连接、维护和工程入口,各行仍打开原来的子页。 */

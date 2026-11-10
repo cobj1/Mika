@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="local_mode_title">選擇 AI 執行方式</string>
+    <string name="local_mode_body">選擇在這台手機執行模型，或連接線上服務。之後可在設定中切換。</string>
+    <string name="local_model_title">手機本機模型</string>
+    <string name="local_model_entry">下載、檢查並啟用本機主模型</string>
+    <string name="local_mode_local_body">先下載模型，再在這台手機執行，無需填寫 API Key。</string>
+    <string name="local_mode_local">選擇本機模型</string>
+    <string name="local_mode_online">使用線上模型</string>
+    <string name="local_mode_online_body">登入帳號或填寫 API 資訊，連接模型服務。</string>
+    <string name="local_model_intro">只下載你選擇的模型。檔案驗證後點選「用作主模型」，Mika 會先試執行，成功後再切換。啟用時輕量模型也切到本機，並關閉線上視覺模型；之後可在模型設定中調整。</string>
+    <string name="local_model_limits">文字模型透過文字、畫面控制項與 OCR 運作，不直接理解圖片。較小模型佔用較少資源，複雜任務效果與速度需在本機驗證。本機推論無需開發人員選項，操作其他應用程式需另行設定。</string>
+    <string name="local_model_activating">正在試執行本機模型…</string>
+    <string name="local_model_size">下載大小：%1$s</string>
+    <string name="local_model_recommended">依目前資源推薦</string>
+    <string name="local_model_current">目前主模型</string>
+    <string name="local_model_use">用作主模型</string>
+    <string name="local_model_leave_note">離開頁面會暫停下載或停止設定，未完成的下載可繼續。</string>
+    <string name="local_error_unsupported">這台裝置暫不支援本機模型執行環境。</string>
+    <string name="local_error_memory">目前可用記憶體不足，請關閉其他應用程式後重試。</string>
+    <string name="local_error_storage">儲存空間不足，請清理後重試。</string>
+    <string name="local_error_download">下載失敗，請檢查網路後重試，已下載的部分會保留。</string>
+    <string name="local_error_integrity">模型檔案驗證失敗，請重新下載。</string>
+    <string name="local_error_runtime">本機模型無法執行，請重試或選擇其他模型。</string>
+    <string name="local_error_timeout">本機模型執行逾時，請重試或選擇較小的模型。</string>
+    <string name="local_error_busy">已有本機模型操作正在進行，請稍後重試。</string>
+    <string name="local_error_active_delete">請先切換到其他主模型，再刪除此模型。</string>
+    <string name="local_error_model_missing">請先下載並驗證此模型。</string>
+</resources>

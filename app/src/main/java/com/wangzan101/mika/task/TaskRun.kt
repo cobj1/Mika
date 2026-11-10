@@ -245,6 +245,9 @@ class TaskRun(
     val sharedFiles: StateFlow<List<SharedFile>> = _sharedFiles.flow
     val takeoverStage: StateFlow<Takeover.Stage> = _takeoverStage.flow
     val frames: StateFlow<Bitmap?> = _frames.flow
+    private val previewDemand = com.wangzan101.mika.cap.phone.display.PreviewDemand()
+    /** 可见的 UI 在 STARTED 生命周期内持有；关闭预览不影响模型内部截图和画面判定。 */
+    fun retainPreview(): AutoCloseable = previewDemand.acquire()
     /** 本任务到此刻的活动(实际做过的事);悬浮胶囊的卡片按任务取,不只看显示中的那个。 */
     val activities: StateFlow<List<RunEvent.Activity>> = _activities.flow
     /** 本任务的虚拟屏编号;屏到用到系统命令、事件工具或第一次打开 App 时才建,之前和释放之后为 -1。 */
@@ -301,6 +304,7 @@ class TaskRun(
 
     fun cancel() {
         stopPressed = true
+        phone?.screen?.let { screen -> scope.launch(Dispatchers.IO) { screen.cancelPointers() } }
         children?.cancelAll(RunId(key))
         val running = loop
         val t = takeover
@@ -562,6 +566,36 @@ class TaskRun(
                 } catch (e: CancellationException) { throw e }
                 catch (_: com.wangzan101.mika.core.access.AppAccessDenied) { false }
             }
+            var previewDisplay: AgentDisplay? = null
+            var visiblePhone: Pair<AgentDisplay?, Boolean>? = null
+            val previewPublisher = TaskPreviewPublisher<Bitmap>(
+                target = {
+                    val stack = webStack
+                    when {
+                        !previewDemand.active.value -> TaskPreviewPublisher.Target(TaskPreviewPublisher.Mode.Hidden)
+                        dispatcher?.surface != WEB -> TaskPreviewPublisher.Target(TaskPreviewPublisher.Mode.Phone, previewDisplay)
+                        stack != null && stack.hasVisibleTab && !stack.handedOver && !stack.onBorrowedTab ->
+                            TaskPreviewPublisher.Target(TaskPreviewPublisher.Mode.Web, stack.pool.current(stack.taskId))
+                        else -> TaskPreviewPublisher.Target(TaskPreviewPublisher.Mode.Hidden)
+                    }
+                },
+                phoneVisible = { show ->
+                    val current = previewDisplay
+                    val next = current to show
+                    if (next != visiblePhone) {
+                        if (visiblePhone?.first !== current) visiblePhone?.first?.setPreviewVisible(false)
+                        current?.setPreviewVisible(show)
+                        visiblePhone = next
+                    }
+                },
+                phoneAllowed = ::previewAllowed,
+                phoneFrame = { previewDisplay?.frames?.value },
+                webFrame = { withContext(Dispatchers.IO) { webStack?.host?.latestFrame() } },
+                publish = { _frames.value = it },
+            )
+            // 同一份可见需求同时用于手机与网页；页面隐藏不再复制网页画面。
+            // 网页复制由下面的定时协程负责，关闭需求不会排在慢截图之后才撤销。
+            side.launch { previewDemand.active.collectLatest { previewPublisher.refresh() } }
             val metrics = mainScreenMetrics()
             // 在 App 里操作的节奏(设置 › 任务运行);评测、真机验收按钩子覆盖
             val pace = env.evalHooks.operatingPace ?: FeatureFlags.get(service).operatingPace()
@@ -595,7 +629,10 @@ class TaskRun(
                 shellBinder = shell.asBinder()
                 side.launch { conn.shell.map { it != null }.collect { shellUp.value = it } }
                 val agentDisplay = LazyAgentDisplay(metrics.widthPixels, metrics.heightPixels) {
-                    suspend fun create() = resources.acquire(Dispatchers.IO, AgentDisplay::release) { AgentDisplay(shell, metrics.widthPixels, metrics.heightPixels, metrics.densityDpi, service.getSystemService(DisplayManager::class.java)) }
+                    suspend fun create() = resources.acquire(Dispatchers.IO, AgentDisplay::release) {
+                        com.wangzan101.mika.cap.phone.display.RecoverableDisplay.create(service, shell, conversationId, key,
+                            metrics.widthPixels, metrics.heightPixels, metrics.densityDpi)
+                    }
                     try {
                         create()
                     } catch (e: Exception) {
@@ -607,9 +644,11 @@ class TaskRun(
                         while (service.otherRunHasDisplay(this@TaskRun)) delay(DISPLAY_RETRY_MS)
                         create()
                     }.also { d ->
+                        // create 尚未返回，LazyDisplay.current 还未赋值；先登记才能启动静态首帧预览。
+                        previewDisplay = d
                         _displayId.value = d.displayId
-                        side.launch { d.frames.collect { if (dispatcher?.surface != WEB) _frames.value = if (previewAllowed()) it else null } }
-                        side.launch { appAccess.state.collect { if (dispatcher?.surface != WEB && !previewAllowed()) _frames.value = null } }
+                        side.launch { d.frames.collect { previewPublisher.refresh() } }
+                        side.launch { appAccess.state.collect { previewPublisher.refresh() } }
                     }
                 }
                 val audio = recovery.audioMute(shell, key).also { mute = it }
@@ -631,6 +670,8 @@ class TaskRun(
                     },
                     clipSaved = { original, ours -> recovery.saveClip(original, ours) },
                     handedOver = { handoverRef?.handedOver == true },
+                    pointerAllowed = { !stopPressed && !shellDied && gate?.movedAwayPending != true &&
+                        gate?.userOnPagePending != true && loop?.state?.value is TaskState.Running },
                     // 打字一段一段出来;App 知识说限制浏览快慢的 App 打得更慢
                     typing = { pkg -> pace.typing(PlacePace.of(pkg?.let(skills::appPace))) },
                     // 启动前就静上,开头几秒也没声;启动被拒就还原
@@ -640,6 +681,7 @@ class TaskRun(
                 )
                 val side0 = PhoneSide(shell, a11y, screen, agentDisplay, muter)
                 phone = side0
+                side.launch { previewPublisher.refresh() }
                 watchTarget(side0, states)
                 return screen
             }
@@ -661,6 +703,7 @@ class TaskRun(
             // 挪回虚拟屏后等窗口出现,Agent 接下来读屏才读得到
             suspend fun moveTask(taskId: Int, to: Int): Boolean {
                 val p = phone ?: return false
+                if (to == Display.DEFAULT_DISPLAY && !p.screen.cancelPointers()) return false
                 val moved = withContext(Dispatchers.IO) { runCatching { p.shell.moveTask(taskId, to) }.getOrDefault(false) }
                 if (moved && to == p.display.current?.displayId) p.screen.awaitContent()
                 return moved
@@ -738,23 +781,15 @@ class TaskRun(
                 // 模型用 web_keep_open 标过的那一页,任务结束时留在后台,记在这一轮名下(对话里那一轮下面显示、关了补一句)
                 stack.keepOrigin = { KeptOrigin(conversationId, _runId.value, goal) }
                 side.launch {
-                    // 网页界面时画中画显示网页显示的画面;换界面时先清掉上一边的画面;怎么显示见 WebPreview
-                    var last: String? = null
+                    // 即使预览隐藏也更新“正在用网页”状态，让小窗能独立于首帧开启。
                     while (true) {
                         delay(WEB_FRAME_MS)
                         val surface = dispatcher?.surface
-                        if (surface != last) {
-                            _frames.value = null
-                            last = surface
-                        }
                         // 当前标签是借来的那一页时它就在用户眼前,和接管中一样不放画面
                         val show = WebPreview.of(onWeb = surface == WEB, hasTab = stack.hasVisibleTab, handedOver = stack.handedOver || stack.onBorrowedTab)
-                        when (show) {
-                            WebPreview.Frames -> withContext(Dispatchers.IO) { stack.host.latestFrame() }?.let { _frames.value = it }
-                            WebPreview.Hidden, WebPreview.NoPage -> _frames.value = null
-                            WebPreview.Off -> Unit
-                        }
                         _webOpen.value = show.open
+                        // 切回静态手机帧也主动重播；复制网页后再次核对路由，拒绝迟到的旧图。
+                        previewPublisher.refresh(captureWeb = true)
                     }
                 }
                 stack.screen
@@ -863,8 +898,12 @@ class TaskRun(
                 SystemPrompt.identity(),
                 // 助手断开、被挪走只在这一步用的是手机时才查
                 gate = { w ->
-                    if (phoneScreen.acquired && dispatcher?.surface != WEB) phone?.screen?.let { awaitUserPick(it, taskGate, w) }
-                    taskGate.pass({ phoneScreen.acquired && dispatcher?.surface != WEB }, w)
+                    val waiting: (TaskState?) -> Unit = { state ->
+                        if (state != null) phone?.screen?.let { screen -> side.launch(Dispatchers.IO) { screen.cancelPointers() } }
+                        w(state)
+                    }
+                    if (phoneScreen.acquired && dispatcher?.surface != WEB) phone?.screen?.let { awaitUserPick(it, taskGate, waiting) }
+                    taskGate.pass({ phoneScreen.acquired && dispatcher?.surface != WEB }, waiting)
                 }, knowledge = knowledge, sink = sink, trace = trace, installedApps = { apps },
                 // 选渠道用的事实:装了哪些 App、在 Mika 里登录过哪些网站、有没有内置浏览器
                 channelFacts = {
@@ -980,6 +1019,7 @@ class TaskRun(
             side.launch {
                 agent.state.collect {
                     if (it == TaskState.Idle) return@collect
+                    if (it !is TaskState.Running) phone?.screen?.cancelPointers()
                     if (it is TaskState.Running && it.preview != null && (gate?.movedAwayPending == true || gate?.userOnPagePending == true)) return@collect
                     val previous = _state.value as? TaskState.Running
                     if (it is TaskState.Running && previous != null && previous.preview != it.preview &&
@@ -1031,6 +1071,7 @@ class TaskRun(
             // 借来的页面还回浏览器页(在关掉网页这一套之前)
             withContext(Dispatchers.Main + NonCancellable) { runCatching { UserBrowser.existing()?.loans?.end(key) } }
             withContext(Dispatchers.IO + NonCancellable) {
+                phone?.screen?.cancelPointers()
                 // 前面哪步抛错,屏和网页显示也照放(按建的反序)
                 try {
                     // 先定 Mika 屏上 App 的去留(留下的挪到主屏后面、正在出声的关掉)并释放屏,再还原静音:留下的不会突然出声
@@ -1128,6 +1169,7 @@ class TaskRun(
                     states.taskMovedAway(displayId, t.taskId).collect {
                         // 用户点「我来处理」后 App 本来就该在主屏
                         if (handoverRef?.handedOver == true) return@collect
+                        p.screen.cancelPointers()
                         gate?.onTaskMovedAway()
                         publish(_state.value) // 立即显示暂停,不等下一个改动屏幕的工具
                     }
@@ -1317,6 +1359,7 @@ class TaskRun(
             setState(shown)
             awake?.onState(state)
         }
+        if (shown is TaskState.Held) phone?.screen?.let { screen -> scope.launch(Dispatchers.IO) { screen.cancelPointers() } }
         service.refreshNotifications(this)
     }
 

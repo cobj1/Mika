@@ -5,6 +5,7 @@ import com.wangzan101.mika.cap.phone.setup.BuiltinShellManager
 import com.wangzan101.mika.cap.phone.setup.BuiltinShellRecovery
 import com.wangzan101.mika.cap.phone.setup.PairingCoordinator
 import com.wangzan101.mika.cap.phone.setup.PhoneSetupPrompt
+import com.wangzan101.mika.cap.phone.setup.SetupAutomation
 import com.wangzan101.mika.cap.phone.shell.BuiltinShellConnection
 import com.wangzan101.mika.cap.phone.shell.HelperHub
 import com.wangzan101.mika.cap.phone.shell.SharedShell
@@ -39,6 +40,9 @@ class PhoneServices(context: Context) {
 
     /** 一次配对的全过程。 */
     val pairing: PairingCoordinator by lazy { PairingCoordinator(app, shellControl) }
+
+    /** 用户主动启动的设置向导；切到系统设置后仍继续，停止后不自动恢复。 */
+    val setupAutomation: SetupAutomation by lazy { SetupAutomation(app, shellControl, pairing) }
 
     /** 任务要用手机、助手却没在运行时的提示。 */
     val setupPrompt = PhoneSetupPrompt(app)

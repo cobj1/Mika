@@ -2,6 +2,7 @@ package com.wangzan101.mika.capsule
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -12,6 +13,26 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class CapsulePreviewTest {
     private class Frame(val pixels: String)
+
+    @Test fun revocationImmediatelyClearsPendingFrameAndRestoresIdenticalStaticFrame() = runTest {
+        val first = Frame("same")
+        val source = MutableStateFlow<Frame?>(first)
+        val got = mutableListOf<String?>()
+        val job = launch { source.revocablePreviewFrames(200) { a, b -> a.pixels == b.pixels }.collect { got += it?.pixels } }
+        runCurrent()
+        source.value = Frame("pending")
+        runCurrent()
+        source.value = null
+        runCurrent()
+        assertEquals(listOf("same", null), got)
+        advanceTimeBy(300)
+        runCurrent()
+        assertEquals(listOf("same", null), got)
+        source.value = first
+        runCurrent()
+        assertEquals(listOf("same", null, "same"), got)
+        job.cancel()
+    }
 
     @Test fun atMostOneFramePerIntervalKeepingTheLatest() = runTest {
         val source = MutableSharedFlow<Frame>(extraBufferCapacity = 16)

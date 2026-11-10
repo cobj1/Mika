@@ -99,6 +99,12 @@ internal class Interfaces(
         sessionFor(tool).checkAppAccess(current = after || tool.verb !in APP_TARGET_VERBS)
     }
 
+    /** 触摸被拒绝/失败时只释放它所属屏的按压；不读页面，不产生新的点击。 */
+    suspend fun cancelPointers(tool: AgentTool?) {
+        if (tool?.verb != Verb.PhoneTouch) return
+        sessionFor(tool).screen.pointer("cancel", 0, 0, 0)
+    }
+
     /** 此刻在操作的那块屏的读屏状态。 */
     val session: ScreenSession get() = sessions.getValue(focus.current.id)
 

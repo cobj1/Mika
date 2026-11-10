@@ -50,7 +50,7 @@ class HelperHub(context: Context) {
         return sh.openDevtoolsSocket(endpoint)
     }
 
-    /** 交给助手的本进程令牌:Mika 进程一死,助手就从它的死亡通知得知,撤掉 Mika 留下的改动。 */
+    /** 交给助手的本进程令牌：死亡通知触发系统改动清理、可恢复屏限时停放。 */
     private val token = Binder()
     private val nonces: HandoffNonces by lazy { HandoffNonces(PrefsNonceStore(app), SystemClock::elapsedRealtime, System::currentTimeMillis) }
 

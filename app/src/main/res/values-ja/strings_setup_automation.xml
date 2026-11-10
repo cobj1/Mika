@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_auto_title">自動設定</string>
+    <string name="setup_auto_start">自動設定を開始</string>
+    <string name="setup_auto_stop">停止</string>
+    <string name="setup_auto_intro">最初に Mika のユーザー補助サービスを手動で有効にしてください。その後、Mika が開発者向けオプション、USB デバッグ、ワイヤレス デバッグを有効にしてペア設定します。画面ロックのパスワード入力とシステムの確認は手動で行ってください。</string>
+    <string name="setup_auto_enable_accessibility">システム設定で Mika のユーザー補助サービスを手動で有効にしてください。接続されると設定が自動で続行されます。</string>
+    <string name="setup_auto_developer">開発者向けオプションを有効にしています…</string>
+    <string name="setup_auto_usb">USB デバッグを有効にしています…</string>
+    <string name="setup_auto_wireless">ワイヤレス デバッグを開いています…</string>
+    <string name="setup_auto_pairing">ペア設定画面を開いています。Mika がコードを読み取り、自動でペア設定します。</string>
+    <string name="setup_auto_confirm">システム画面で確認または本人確認を完了してください。その後、自動で続行されます。</string>
+    <string name="setup_auto_manual">自動設定を一時停止しました。Mika に戻って手動で手順を完了するか、もう一度お試しください。</string>
+    <string name="setup_auto_stopped">自動設定を停止しました。手動で続行するか、最初からやり直せます。</string>
+    <string name="setup_auto_done">スマートフォン操作の設定が完了しました。</string>
+</resources>

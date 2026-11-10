@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_access_title">먼저 접근성을 켜세요</string>
+    <string name="onboarding_access_body">시스템 접근성 설정에서 Mika를 켜면 화면을 읽고 앱을 대신 조작할 수 있습니다. 권한 허용 여부는 직접 선택합니다. 다음으로 AI 모델을 설정하며, 고급 휴대전화 제어는 나중에 켤 수 있습니다.</string>
+    <string name="onboarding_access_open">접근성 허용</string>
+    <string name="onboarding_access_continue">모델 설정 계속</string>
+    <string name="onboarding_access_connected">Mika 접근성 서비스가 연결되었습니다.</string>
+    <string name="onboarding_access_app_info">켤 수 없나요? 앱 정보에서 제한된 설정을 허용하세요.</string>
+    <string name="onboarding_later">나중에</string>
+    <string name="onboarding_advanced_title">고급 기능 활성화</string>
+    <string name="onboarding_advanced_body">Mika가 별도의 백그라운드 화면에서 앱을 조작합니다. 아래 버튼을 누르면 개발자 옵션, USB 디버깅, 무선 디버깅 및 페어링 설정을 안내합니다. 채팅, 웹, 파일 작업에는 이 단계가 필요하지 않습니다.</string>
+    <string name="onboarding_advanced_enable">고급 기능 활성화</string>
+    <string name="onboarding_advanced_confirmation">선택 사항인 무료 설정입니다. 화면 잠금 비밀번호 입력과 시스템 확인은 직접 해야 합니다.</string>
+    <string name="onboarding_model_saved">모델이 저장되었습니다</string>
+</resources>

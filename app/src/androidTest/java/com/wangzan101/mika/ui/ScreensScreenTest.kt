@@ -67,4 +67,37 @@ class ScreensScreenTest {
         compose.onNodeWithText(ScreensCopy.PREVIEW).assertExists()
         assertEquals(emptyList<String>(), calls)
     }
+
+    @Test fun previewDemandExistsOnlyWhileTheCardIsExpanded() {
+        var leases = 0
+        val source = kotlinx.coroutines.flow.MutableStateFlow<android.graphics.Bitmap?>(null)
+        compose.setContent {
+            MikaTheme {
+                ScreensContent(listOf(row(12)), onBack = {}, onOpenConversation = {}, frames = { source },
+                    retainPreview = { leases++; AutoCloseable { leases-- } })
+            }
+        }
+        compose.runOnIdle { assertEquals(0, leases) }
+        compose.onNodeWithTag("screens-preview-k12").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(1, leases) }
+        compose.onNodeWithTag("screens-preview-k12").performClick()
+        compose.runOnIdle { assertEquals(0, leases) }
+    }
+
+    @Test fun revokedFrameClosesImageAndZoomThenSameFrameCanReturn() {
+        val bitmap = android.graphics.Bitmap.createBitmap(120, 240, android.graphics.Bitmap.Config.ARGB_8888)
+        val source = kotlinx.coroutines.flow.MutableStateFlow<android.graphics.Bitmap?>(bitmap)
+        compose.setContent {
+            MikaTheme { ScreensContent(listOf(row(12)), onBack = {}, onOpenConversation = {}, frames = { source }) }
+        }
+        compose.onNodeWithTag("screens-preview-k12").performScrollTo().performClick()
+        compose.onNodeWithTag("screens-zoom").performScrollTo().performClick()
+        compose.onNodeWithTag("screens-zoom-dialog").assertExists()
+        compose.runOnIdle { source.value = null }
+        compose.onNodeWithTag("screens-zoom").assertDoesNotExist()
+        compose.onNodeWithTag("screens-zoom-dialog").assertDoesNotExist()
+        compose.runOnIdle { source.value = bitmap }
+        compose.onNodeWithTag("screens-zoom").assertExists()
+        compose.onNodeWithTag("screens-zoom-dialog").assertDoesNotExist()
+    }
 }

@@ -31,7 +31,7 @@ import kotlin.system.exitProcess
  * (见 [HelperHandoff.usbScript]);已 root 的手机上经 `su 2000 -c` 以 shell 身份起的也是它(见 [HelperHandoff.rootCommand])。
  *
  * 特权逻辑全在 [ShellService];这里只负责把它的 Binder 交给 Mika,并且在 Mika 进程结束后不退出:
- * 撤掉 Mika 留下的改动,等 Mika 再起来时重新交接。Mika 死后一会儿还没回来、而它交来的心愿([RestoreWish])要拉起来时,
+ * 撤掉 Mika 留下的输入/剪贴板/静音改动，可恢复屏停放至多两分钟，等 Mika 再起来时重新交接。Mika 死后一会儿还没回来、而它交来的心愿([RestoreWish])要拉起来时,
  * 把它的无障碍服务写回系统列表,再经交接用的 provider 把它的进程拉起来(见 [HelperRestorePolicy])。
  */
 object HelperProcess {
@@ -181,11 +181,13 @@ object HelperProcess {
             }
         }
 
-        /** Mika 进程没了:它建的屏、静音、剪贴板改动跟着撤掉(和服务结束时一样),助手本身留着。 */
+        /** 进程异常退出可短暂保留已登记的屏；强行停止仍立即全释放，剪贴板/静音/手指总是马上清理。 */
         private fun onAppDied(token: IBinder) {
             if (appToken !== token) return
             appToken = null
-            runCatching { service.releaseAll() }.onFailure { Log.w(TAG, "cleanup failed", it) }
+            runCatching {
+                if (forceStopped()) service.releaseAll() else service.onClientDied()
+            }.onFailure { Log.w(TAG, "cleanup failed", it) }
             if (!installed()) {
                 Log.i(TAG, "$packageName is gone; exiting")
                 exitProcess(0)

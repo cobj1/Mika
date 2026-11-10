@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_access_title">Activa primero la accesibilidad</string>
+    <string name="onboarding_access_body">Activa Mika en los ajustes de accesibilidad del sistema para que pueda leer la interfaz y manejar aplicaciones por ti. Tú decides si concedes acceso. Después configura tu modelo de IA; puedes activar el control avanzado del teléfono más adelante.</string>
+    <string name="onboarding_access_open">Permitir accesibilidad</string>
+    <string name="onboarding_access_continue">Continuar con el modelo</string>
+    <string name="onboarding_access_connected">El servicio de accesibilidad de Mika está conectado.</string>
+    <string name="onboarding_access_app_info">¿No puedes activarlo? Permite los ajustes restringidos en Información de la aplicación.</string>
+    <string name="onboarding_later">Más tarde</string>
+    <string name="onboarding_advanced_title">Activar funciones avanzadas</string>
+    <string name="onboarding_advanced_body">Deja que Mika maneje aplicaciones en una pantalla independiente en segundo plano. El botón inferior inicia la configuración guiada de las opciones para desarrolladores, depuración USB, depuración inalámbrica y vinculación. El chat y las tareas web y de archivos no necesitan este paso.</string>
+    <string name="onboarding_advanced_enable">Activar funciones avanzadas</string>
+    <string name="onboarding_advanced_confirmation">Esta configuración es gratuita y opcional. Introduce tú la contraseña de bloqueo y confirma los avisos del sistema.</string>
+    <string name="onboarding_model_saved">Modelo guardado</string>
+</resources>

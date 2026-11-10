@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_advanced_title">Unlock advanced phone control</string>
+    <string name="setup_advanced_intro">Open guided setup for Developer options, USB debugging, Wireless debugging and pairing. This setup does not require an AI model.</string>
+    <string name="setup_advanced_ready">Advanced phone control is enabled</string>
+    <string name="setup_advanced_ready_body">Accessibility and the phone helper are connected. Review their status or pair again below.</string>
+</resources>

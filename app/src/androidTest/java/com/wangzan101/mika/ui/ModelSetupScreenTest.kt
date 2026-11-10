@@ -19,6 +19,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.wangzan101.mika.core.model.Capabilities
 import com.wangzan101.mika.core.model.ListedModel
 import com.wangzan101.mika.core.model.ModelRole
+import com.wangzan101.mika.localmodel.LocalModelCatalog
 import com.wangzan101.mika.settings.Provider
 import com.wangzan101.mika.settings.AesGcmKeyCipher
 import com.wangzan101.mika.settings.ModelContextSettings
@@ -69,6 +70,24 @@ class ModelSetupScreenTest {
 
     private fun show(ui: ModelSetupUi, onboarding: Boolean = true) =
         compose.setContent { MikaTheme { ModelSetupContent(ui, onboarding = onboarding, actions = actions, onBack = {}) } }
+
+    @Test fun localModelDoesNotOfferContextRetuning() {
+        val local = Provider("local", "On-device", ProviderConfig.Kind.OpenAiCompat, LocalModelCatalog.BASE_URL,
+            listOf(ListedModel("qwen3-0.6b-q8", toolCalls = true, vision = false)))
+        val cfg = main.copy(id = "local-main", providerId = local.id, baseUrl = local.baseUrl, model = "qwen3-0.6b-q8")
+        val ui = ModelSetupUi(form, providers = listOf(local), configs = listOf(cfg), roles = RoleChoices(main = cfg.id))
+        compose.setContent { MikaTheme { ModelSetupContent(ui, false, actions, {}) } }
+        compose.onNodeWithTag("context-main").assertDoesNotExist()
+    }
+
+    @Test fun localModelsCannotBeSelectedAsImageModels() {
+        val local = Provider("local", "On-device", ProviderConfig.Kind.OpenAiCompat, LocalModelCatalog.BASE_URL,
+            listOf(ListedModel("qwen3-0.6b-q8", toolCalls = true, vision = false)))
+        compose.setContent { MikaTheme { RolePickerContent(ModelSetupUi(form, providers = listOf(local)),
+            ModelRole.Vision, RolePickerActions(), {}) } }
+        compose.onNodeWithText("qwen3-0.6b-q8").assertDoesNotExist()
+        compose.onNodeWithTag("manual-model").assertDoesNotExist()
+    }
 
     @Test fun welcomeStarts() {
         compose.setContent { MikaTheme { WelcomeScreen { calls += "start" } } }

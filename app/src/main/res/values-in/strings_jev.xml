@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jev_title">Periksa hasil OCR</string>
+    <string name="jev_intro">Jev membandingkan teks yang dikenali dengan gambar aslinya. Model berjalan di perangkat ini dan tidak menggantikan model percakapan.</string>
+    <string name="jev_download_note">Unduhan opsional: sekitar 1.95 GB. Gambar dan teks tetap di perangkat ini selama pemeriksaan.</string>
+    <string name="jev_download">Unduh / lanjutkan</string>
+    <string name="jev_stop">Hentikan</string>
+    <string name="jev_remove">Hapus model</string>
+    <string name="jev_remove_confirm">Hapus berkas model yang sudah diunduh? Anda dapat mengunduhnya lagi nanti.</string>
+    <string name="jev_ready">Model siap</string>
+    <string name="jev_downloading">Mengunduh model…</string>
+    <string name="jev_verifying">Memverifikasi berkas unduhan…</string>
+    <string name="jev_loading">Memuat model…</string>
+    <string name="jev_scoring">Memeriksa teks…</string>
+    <string name="jev_progress">%1$d%%</string>
+    <string name="jev_leave_note">Meninggalkan halaman ini akan menjeda unduhan atau menghentikan pemeriksaan. Unduhan yang belum selesai dapat dilanjutkan.</string>
+    <string name="jev_input_title">Periksa area teks</string>
+    <string name="jev_crop_hint">Pilih gambar satu baris atau paragraf, atau potong dengan penggeser batas di bawah, lalu tempelkan teks OCR. Tabel dan rumus tidak didukung.</string>
+    <string name="jev_choose_image">Pilih gambar</string>
+    <string name="jev_image_selected">Gambar dipilih</string>
+    <string name="jev_text_label">Teks OCR</string>
+    <string name="jev_text_count">%1$d / %2$d</string>
+    <string name="jev_score">Periksa di perangkat ini</string>
+    <string name="jev_score_value">Skor kesesuaian: %1$s</string>
+    <string name="jev_score_note">Skor yang lebih tinggi berarti teks lebih mungkin cocok dengan gambar. Skor belum dikalibrasi untuk perangkat dan OCR ini; bukan bukti bahwa tindakan ponsel berhasil.</string>
+    <string name="jev_download_error">Unduhan gagal. Periksa jaringan lalu coba lagi; bagian yang sudah diunduh tetap disimpan.</string>
+    <string name="jev_integrity_error">Berkas model gagal diverifikasi. Silakan unduh ulang.</string>
+    <string name="jev_no_space">Ruang penyimpanan tidak cukup. Kosongkan ruang lalu coba lagi.</string>
+    <string name="jev_memory_low">Memori tersedia tidak cukup. Tutup aplikasi lain lalu coba lagi.</string>
+    <string name="jev_runtime_error">Mesin pemeriksaan tidak dapat berjalan. Silakan coba lagi.</string>
+    <string name="jev_image_error">Gambar yang dipilih tidak dapat dibaca. Pilih gambar lain.</string>
+    <string name="jev_input_error">Pilih gambar area teks dan masukkan 1–1000 karakter teks OCR.</string>
+    <string name="jev_timeout">Pemeriksaan kehabisan waktu. Coba gambar yang lebih kecil atau teks yang lebih pendek.</string>
+    <string name="jev_unavailable">Perangkat ini tidak mendukung pemeriksaan Jev lokal.</string>
+    <string name="jev_cached">Hasil terbaru selama kunjungan ini digunakan kembali, tanpa memuat ulang model.</string>
+    <string name="jev_timing">Pemuatan %1$s dtk · Penilaian %2$s dtk</string>
+    <string name="jev_crop_horizontal">Batas kiri dan kanan</string>
+    <string name="jev_crop_vertical">Batas atas dan bawah</string>
+    <string name="jev_crop_reset">Pulihkan gambar utuh</string>
+    <string name="jev_text_layout_error">Terlalu banyak baris. Gunakan satu baris atau satu paragraf teks.</string>
+    <string name="jev_device_ready">Sumber daya saat ini lolos pemeriksaan awal. Kinerja sebenarnya harus dinilai di ponsel ini.</string>
+    <string name="jev_busy">Pemeriksaan teks lokal lain sedang berjalan. Coba lagi nanti.</string>
+    <string name="jev_recheck">Periksa perangkat lagi</string>
+    <string name="jev_read_image">Kenali teks dari area yang dipilih</string>
+    <string name="jev_ocr_empty">Tidak ada teks yang dapat digunakan. Sesuaikan area atau masukkan teks secara manual.</string>
+    <string name="jev_crop_detail">Area yang dipilih</string>
+</resources>

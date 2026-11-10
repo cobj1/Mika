@@ -119,24 +119,58 @@ open class ScreenAccessibility : AccessibilityService() {
 
     private suspend fun dispatch(displayId: Int, strokes: List<GestureDescription.StrokeDescription>): Boolean {
         val service = instance.value ?: return false
+        val manager = service.getSystemService(android.hardware.display.DisplayManager::class.java)
+        val targetRemoved = java.util.concurrent.atomic.AtomicBoolean(false)
+        val listener = object : android.hardware.display.DisplayManager.DisplayListener {
+            override fun onDisplayAdded(id: Int) = Unit
+            override fun onDisplayChanged(id: Int) = Unit
+            override fun onDisplayRemoved(id: Int) {
+                if (id == displayId) {
+                    targetRemoved.set(true)
+                    manager.unregisterDisplayListener(this)
+                }
+            }
+        }
         val gesture = GestureDescription.Builder()
             .setDisplayId(displayId)
             .apply { strokes.forEach(::addStroke) }
             .build()
-        suspend fun send(): Boolean = suspendCancellableCoroutine { cont ->
+        suspend fun send(completed: () -> Unit): Boolean = suspendCancellableCoroutine { cont ->
+            fun finished() { manager.unregisterDisplayListener(listener); completed() }
             val callback = object : GestureResultCallback() {
                 override fun onCompleted(gestureDescription: GestureDescription) {
+                    finished()
                     if (cont.isActive) cont.resume(true)
                 }
 
                 override fun onCancelled(gestureDescription: GestureDescription) {
+                    finished()
                     if (cont.isActive) cont.resume(false)
                 }
             }
-            if (!service.dispatchGesture(gesture, callback, null) && cont.isActive) cont.resume(false)
+            if (!service.dispatchGesture(gesture, callback, null)) {
+                finished()
+                if (cont.isActive) cont.resume(false)
+            }
         }
         // 注入是在用户屏幕上操作别的 App,不是操作 Mika 自己的浮层;所有单点、双击和拖动统一隔离
-        return service.overlayHost?.passInjectedGesturesThrough { send() } ?: send()
+        // 隔离放外层，使gate自己的超时不会被浮层清理所用的NonCancellable遮住。
+        suspend fun guarded() = InjectedInputGate.shared.accessibility(
+            (strokes.maxOfOrNull { it.startTime + it.duration } ?: 0L) + 5_000L,
+            targetGone = targetRemoved::get,
+        ) { completed ->
+            // 回调丢失后也保留销毁监听，确认目标屏移除才能解除未知输入状态；不依赖displayId不被复用。
+            val available = runCatching {
+                manager.registerDisplayListener(listener, android.os.Handler(android.os.Looper.getMainLooper()))
+                manager.getDisplay(displayId)?.isValid == true && !targetRemoved.get()
+            }.getOrDefault(false)
+            if (!available) {
+                manager.unregisterDisplayListener(listener)
+                completed()
+                false
+            } else send(completed)
+        }
+        return service.overlayHost?.passInjectedGesturesThrough { guarded() } ?: guarded()
     }
 
     /** 截一张用户屏幕(主屏)的结果:画面,或屏上有防截屏窗口,或截不到(错误码)。 */

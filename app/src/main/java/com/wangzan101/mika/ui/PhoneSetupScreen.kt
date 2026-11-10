@@ -108,6 +108,7 @@ fun PhoneSetupScreen(status: SystemStatus, repair: Boolean, onFix: (Fix) -> Unit
     val context = LocalContext.current
     val phone = remember { PhoneServices.of(context) }
     val pairing = phone.pairing
+    val automation by phone.setupAutomation.state.collectAsState()
     val discovery by phone.shellControl.pairingDiscovery.collectAsState()
     val scanning by phone.shellManager.scanningPorts.collectAsState()
     val shell = status.builtinShell
@@ -150,12 +151,12 @@ fun PhoneSetupScreen(status: SystemStatus, repair: Boolean, onFix: (Fix) -> Unit
     // 到了配对一步:开始找配对窗口;通知没允许就在这时请求(配对码要填在通知里)。
     // 「配对」通知被关掉要去系统设置里开,不自动跳过去,页面上给按钮
     LaunchedEffect(view.current) {
-        if (view.current == SetupStep.PairingCode) pairing.begin()
+        if (view.current == SetupStep.PairingCode && !phone.setupAutomation.state.value.active) pairing.begin()
     }
     // 停在配对一步时离开引导页,多半是自己切去系统设置打开配对窗口(不一定点「去无线调试」):从这时起再看 10 分钟,
     // 免得引导页放久了,读配对码、弹填码通知都已经停了
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
-        if (view.current == SetupStep.PairingCode) pairing.begin()
+        if (view.current == SetupStep.PairingCode && !phone.setupAutomation.state.value.active) pairing.begin()
     }
     // 走到配对一步后无障碍被系统断开:不退回无障碍一步,
     // 和跳过一样留在配对一步、改说在通知里填;又连上了照样自己读
@@ -163,8 +164,8 @@ fun PhoneSetupScreen(status: SystemStatus, repair: Boolean, onFix: (Fix) -> Unit
         if (view.current == SetupStep.PairingCode) accessibilitySkipped = true
     }
     val notificationsOff = view.notifyIssue == PairingNotifyIssue.NotificationsOff
-    LaunchedEffect(notificationsOff) {
-        if (notificationsOff && !askedNotifications) {
+    LaunchedEffect(notificationsOff, automation.active) {
+        if (notificationsOff && !askedNotifications && !automation.active) {
             askedNotifications = true
             onFix(Fix.AllowNotifications)
         }
@@ -181,6 +182,7 @@ fun PhoneSetupScreen(status: SystemStatus, repair: Boolean, onFix: (Fix) -> Unit
     // 没配好就不设置了:撤掉配对通知、不再找配对窗口(填码通知一到配对一步就放进通知栏,不撤会挂着;end 也结束重新配对)。
     // 正在配对、连接时让它做完,配好了留着「配对成功」
     val close = {
+        phone.setupAutomation.stop()
         if (view.phase == SetupPhase.Guide || view.phase == SetupPhase.Failed) pairing.end() else pairing.cancelRepair()
         onClose()
     }
@@ -188,6 +190,7 @@ fun PhoneSetupScreen(status: SystemStatus, repair: Boolean, onFix: (Fix) -> Unit
     PhoneSetupContent(
         view = view,
         onStepAction = { step ->
+            phone.setupAutomation.stop()
             when (step) {
                 SetupStep.DeveloperOptions -> onFix(Fix.OpenAboutPhone)
                 SetupStep.UsbDebugging -> onFix(Fix.OpenUsbDebugging)
@@ -198,6 +201,7 @@ fun PhoneSetupScreen(status: SystemStatus, repair: Boolean, onFix: (Fix) -> Unit
             }
         },
         onFailureFix = { fix ->
+            phone.setupAutomation.stop()
             when (fix) {
                 BuiltinShellFix.Retry -> onFix(Fix.RetryPhoneHelper)
                 BuiltinShellFix.RePair -> { pairing.begin(); onFix(Fix.OpenWirelessDebugging) }
@@ -206,28 +210,33 @@ fun PhoneSetupScreen(status: SystemStatus, repair: Boolean, onFix: (Fix) -> Unit
                 BuiltinShellFix.RunUsbCommand -> copyUsbCommand()
             }
         },
-        onAllowNotifications = { onFix(Fix.AllowNotifications) },
-        onOpenPairingChannel = { onFix(Fix.OpenPairingChannel) },
+        onAllowNotifications = { phone.setupAutomation.stop(); onFix(Fix.AllowNotifications) },
+        onOpenPairingChannel = { phone.setupAutomation.stop(); onFix(Fix.OpenPairingChannel) },
         headsUpLowered = status.notificationsAllowed && (status.attentionLowered || status.resultLowered),
-        onOpenHeadsUp = { onFix(if (status.attentionLowered) Fix.OpenAttentionChannel else Fix.OpenResultChannel) },
-        onConfirmStep = { step -> confirmed = confirmed + step; revisit = null },
-        onSubmit = { code, port -> pairing.submit(code, port) },
+        onOpenHeadsUp = { phone.setupAutomation.stop(); onFix(if (status.attentionLowered) Fix.OpenAttentionChannel else Fix.OpenResultChannel) },
+        onConfirmStep = { step -> phone.setupAutomation.stop(); confirmed = confirmed + step; revisit = null },
+        onSubmit = { code, port -> phone.setupAutomation.stop(); pairing.submit(code, port) },
         onClose = close,
-        onAppInfo = { onFix(Fix.OpenAppInfo) },
-        onSkipAccessibility = { accessibilitySkipped = true; revisit = null },
-        onRevisit = { step -> revisit = step },
+        onAppInfo = { phone.setupAutomation.stop(); onFix(Fix.OpenAppInfo) },
+        onSkipAccessibility = { phone.setupAutomation.stop(); accessibilitySkipped = true; revisit = null },
+        onRevisit = { step -> phone.setupAutomation.stop(); revisit = step },
         onboarding = onboarding,
         onDiagnostics = { diagnosticsOpen = true },
         scanning = scanning,
         onConnectPort = { port ->
+            phone.setupAutomation.stop()
             phone.pairing.scope.launch {
                 phone.sharedShell.reconnect()
                 phone.shellManager.connectWithPort(port)
             }
         },
         usbCommand = usbCommand,
-        onAskUsb = { usbAsked = true },
-        onCopyUsbCommand = copyUsbCommand,
+        onAskUsb = { phone.setupAutomation.stop(); usbAsked = true },
+        onCopyUsbCommand = { phone.setupAutomation.stop(); copyUsbCommand() },
+        automationContent = if (view.phase == SetupPhase.Guide || view.phase == SetupPhase.Failed ||
+            (view.phase == SetupPhase.Working && automation.active)) {
+            { SetupAutomationCard(automation, phone.setupAutomation::start, phone.setupAutomation::stop) }
+        } else null,
     )
     // 卡在哪一步都能把诊断信息发给作者:用的是引导页此刻的输入,用户确认过的步骤也在里面
     if (diagnosticsOpen) {
@@ -269,6 +278,7 @@ fun PhoneSetupContent(
     usbCommand: String? = null,
     onAskUsb: () -> Unit = {},
     onCopyUsbCommand: () -> Unit = {},
+    automationContent: (@Composable () -> Unit)? = null,
 ) {
     val canRevisit = view.phase == SetupPhase.Guide || view.phase == SetupPhase.Failed
     fun revisitable(step: SetupStep) = canRevisit && step != view.current && step in PhoneSetupFlow.REVISITABLE &&
@@ -301,6 +311,7 @@ fun PhoneSetupContent(
                             fontSize = 14.5.sp, lineHeight = 23.sp, color = c.ink2,
                         )
                     }
+                    automationContent?.invoke()
                     GroupCard {
                         SetupStep.entries.forEach { step ->
                             StepRow(

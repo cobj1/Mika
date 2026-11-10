@@ -119,6 +119,16 @@ interface IMikaShell {
     // 0=未发送 1=全部事件已投递 2=投递不确定(可能只输入了前缀)
     int injectAsciiText(int displayId, int taskId, String packageName, String text) = 50;
 
+    // 跨调用持续多指输入，仅接受本助手创建的副屏。op:0=down,1=move,2=up,3=cancel全体；pointerId:0..9。
+    // x/y 是当前屏逻辑像素，down/move/up 都需合法坐标；cancel 忽略坐标和 pointerId。
+    // 返回 >=0 当前按下数；-1 参数/状态/归属被拒绝；-2 注入不确定且已尝试取消。30秒空闲自动取消。
+    int injectPointer(int displayId, int op, int pointerId, int x, int y) = 70;
+
+    // 按私有随机凭证创建/接回本会话的屏。只接已停放的屏；同一凭证仍在使用返回 -1。
+    int openDisplaySession(String token, in Surface surface, int width, int height, int dpi) = 80;
+    // 普通连接空闲时释放活动屏及改动；异常退出后停放的屏保留至原定超时。
+    void releaseSessionResources() = 81;
+
     // 沿用早先定下的销毁事务号;AIDL 要求要么全部方法编号要么都不编号
     void destroy() = 16777114;
 }

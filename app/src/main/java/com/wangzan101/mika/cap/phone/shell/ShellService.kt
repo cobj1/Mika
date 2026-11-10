@@ -64,6 +64,9 @@ class ShellService(
 ) : IMikaShell.Stub() {
     private val context: Context = ShellContext.create()
     private val displays = HashMap<Int, VirtualDisplay>()
+    private val displayRecovery = DisplayRecoveryLedger()
+    private val displayRecoveryTimer = Handler(Looper.getMainLooper())
+    private val displayAwakeFlags = HashMap<Int, Boolean>()
     private var orientationWatch: DisplayOrientationWatch? = null
     private val requestedOrientations = ConcurrentHashMap<Int, Int>()
     /** 被静音的包 → 静音前的 PLAY_AUDIO 模式("default" 表示原先未设置),落在 [stateDir] 里,进程被杀后下次启动接着恢复。 */
@@ -76,6 +79,16 @@ class ShellService(
     private val displayManager: DisplayManager =
         DisplayManager::class.java.getDeclaredConstructor(Context::class.java)
             .apply { isAccessible = true }.newInstance(context)
+
+    private val heldTouches = HeldTouchDriver(bounds = { id ->
+        val display = if (ownDisplay(id)) synchronized(displays) { displays[id]?.display } else null
+        if (display == null || !display.isValid) null else {
+            val size = android.graphics.Point()
+            @Suppress("DEPRECATION")
+            display.getRealSize(size)
+            HeldTouchState.Bounds(size.x, size.y, display.rotation)
+        }
+    }, inject = { id, event -> inject(event, id) })
 
     // 剪贴板要以 shell 包名访问(系统只对来自 shell 的剪贴板认「不弹已复制浮层」的标记);读取绕开 ClipboardManager 里 shell 进程走不通的 Settings 查询
     private val clipboard = ShellClipboard(context)
@@ -92,7 +105,7 @@ class ShellService(
         Class.forName("android.app.ActivityTaskManager").getMethod("getService").invoke(null)!!
     }
 
-    override fun createDisplay(surface: Surface, width: Int, height: Int, dpi: Int): Int = try {
+    @Synchronized override fun createDisplay(surface: Surface, width: Int, height: Int, dpi: Int): Int = try {
         createVirtualDisplay(surface, width, height, dpi, trusted = true)
     } catch (t: Throwable) {
         if (!retryWithoutTrust(t)) {
@@ -111,15 +124,61 @@ class ShellService(
         }
     }
 
+    @Synchronized override fun openDisplaySession(token: String, surface: Surface, width: Int, height: Int, dpi: Int): Int {
+        if (!DisplayRecoveryLedger.validToken(token) || !surface.isValid || width !in 1..8192 || height !in 1..8192 || dpi !in 1..2000) return -1
+        expireParkedDisplays()
+        val old = displayRecovery.find(token)
+        if (old != null) {
+            // 在用的凭证不能被另一个并行任务接走。
+            if (old.expiresAt == null) return -1
+            if (old.width == width && old.height == height && old.dpi == dpi) {
+                val vd = synchronized(displays) { displays[old.id] }
+                if (vd != null && runCatching { vd.surface = surface }.isSuccess &&
+                    displayRecovery.attach(token, SystemClock.elapsedRealtime())) {
+                    if (old.keepAwake) awake.start(old.id)
+                    return old.id
+                }
+            }
+            releaseDisplay(old.id)
+        }
+        val id = createDisplay(surface, width, height, dpi)
+        if (id > 0) displayRecovery.add(DisplayRecoveryLedger.Entry(token, id, width, height, dpi,
+            displayAwakeFlags[id] == true))
+        return id
+    }
+
+    /** 仅由 helper 的死亡通知调用：停放屏只保留两分钟，绝不自动继续旧任务。 */
+    @Synchronized fun onClientDied() {
+        heldTouches.cancelAll()
+        restoreClientSideEffects()
+        expireParkedDisplays()
+        val parked = displayRecovery.park(SystemClock.elapsedRealtime())
+        for (entry in parked) {
+            awake.stop(entry.id)
+            val vd = synchronized(displays) { displays[entry.id] }
+            if (vd == null || runCatching { vd.surface = null }.isFailure) releaseDisplay(entry.id)
+        }
+        // 自检等未登记归属的临时屏，仍立即释放。
+        synchronized(displays) { displays.keys.toList() }.filterNot(displayRecovery::parked).forEach(::releaseDisplay)
+        displayRecoveryTimer.postDelayed({ expireParkedDisplays() }, DisplayRecoveryLedger.RETAIN_MS)
+    }
+
+    @Synchronized private fun expireParkedDisplays() {
+        displayRecovery.expired(SystemClock.elapsedRealtime()).forEach(::releaseDisplay)
+    }
+
     private fun createVirtualDisplay(surface: Surface, width: Int, height: Int, dpi: Int, trusted: Boolean): Int {
         val flags = displayFlags(Build.VERSION.SDK_INT, trusted)
         val vd = displayManager.createVirtualDisplay("mika-agent", width, height, dpi, surface, flags)
         val id = vd.display.displayId
         synchronized(displays) { displays[id] = vd }
+        heldTouches.register(id)
         setFullscreenWindowingMode(id)
         ensureOrientationWatch()
         setImePolicy(id)
-        if (DisplayAwake.needed(flags, FLAG_OWN_DISPLAY_GROUP, displayGroup(id))) awake.start(id)
+        val keepAwake = DisplayAwake.needed(flags, FLAG_OWN_DISPLAY_GROUP, displayGroup(id))
+        displayAwakeFlags[id] = keepAwake
+        if (keepAwake) awake.start(id)
         return id
     }
 
@@ -162,9 +221,12 @@ class ShellService(
     }.getOrNull()
 
     /** 只往这个服务自己建的虚拟屏上启动,调用方传错屏号(比如主屏)也不会打扰用户。 */
-    private fun ownDisplay(displayId: Int): Boolean = synchronized(displays) { displayId in displays }
+    private fun ownDisplay(displayId: Int): Boolean = synchronized(displays) { displayId in displays } && !displayRecovery.parked(displayId)
 
-    override fun releaseDisplay(displayId: Int) {
+    @Synchronized override fun releaseDisplay(displayId: Int) {
+        displayRecovery.remove(displayId)
+        displayAwakeFlags.remove(displayId)
+        heldTouches.unregister(displayId)
         awake.stop(displayId)
         // 锁里只摘下来,关监听(binder)和放屏在锁外做
         val (vd, watch) = synchronized(displays) {
@@ -1173,11 +1235,15 @@ class ShellService(
         false
     }
 
-    override fun injectTap(displayId: Int, x: Int, y: Int): Boolean {
+    @Synchronized
+    override fun injectPointer(displayId: Int, op: Int, pointerId: Int, x: Int, y: Int): Int =
+        heldTouches.pointer(displayId, op, pointerId, x, y)
+
+    override fun injectTap(displayId: Int, x: Int, y: Int): Boolean = heldTouches.single(displayId) {
         val now = SystemClock.uptimeMillis()
         val down = MotionEvent.obtain(now, now, MotionEvent.ACTION_DOWN, x.toFloat(), y.toFloat(), 0)
         val up = MotionEvent.obtain(now, now + TAP_MS, MotionEvent.ACTION_UP, x.toFloat(), y.toFloat(), 0)
-        return try {
+        try {
             down.source = InputDevice.SOURCE_TOUCHSCREEN
             up.source = InputDevice.SOURCE_TOUCHSCREEN
             injectPair(down, up, displayId) { exec("input", "-d", "$displayId", "tap", "$x", "$y") == 0 }
@@ -1198,6 +1264,11 @@ class ShellService(
         if (n < 2 || n > STROKE_MAX_POINTS || xs.size != n || ys.size != n || times[0] != 0L ||
             times.last() > STROKE_MAX_MS || (1 until n).any { times[it] < times[it - 1] }
         ) return false
+        return heldTouches.single(displayId) { injectStrokePoints(displayId, xs, ys, times) }
+    }
+
+    private fun injectStrokePoints(displayId: Int, xs: IntArray, ys: IntArray, times: LongArray): Boolean {
+        val n = times.size
         val down = SystemClock.uptimeMillis()
         fun event(i: Int, action: Int): MotionEvent {
             val props = MotionEvent.PointerProperties().apply { id = 0; toolType = MotionEvent.TOOL_TYPE_FINGER }
@@ -1519,11 +1590,28 @@ class ShellService(
         }
     }
 
-    override fun releaseAll() {
-        restoreClip()
+    private fun restoreClientSideEffects() {
+        runCatching { restoreClip() }.onFailure { Log.w(TAG, "clipboard cleanup failed", it) }
         synchronized(muted) { muted.packages() }.forEach { key ->
-            AppAudioKey.parse(key)?.let { (pkg, user) -> audioMuted(pkg, user, false) } ?: synchronized(muted) { muted.remove(key) }
+            runCatching {
+                AppAudioKey.parse(key)?.let { (pkg, user) -> audioMuted(pkg, user, false) } ?: synchronized(muted) { muted.remove(key) }
+            }.onFailure { Log.w(TAG, "audio cleanup failed", it) }
         }
+    }
+
+    @Synchronized override fun releaseSessionResources() {
+        heldTouches.cancelAll()
+        restoreClientSideEffects()
+        expireParkedDisplays()
+        synchronized(displays) { displays.keys.toList() }.filterNot(displayRecovery::parked).forEach(::releaseDisplay)
+    }
+
+    @Synchronized override fun releaseAll() {
+        heldTouches.unregisterAll()
+        restoreClientSideEffects()
+        displayRecovery.clear()
+        displayAwakeFlags.clear()
+        displayRecoveryTimer.removeCallbacksAndMessages(null)
         awake.stopAll()
         val (all, watch) = synchronized(displays) {
             displays.values.toList().also { displays.clear() } to orientationWatch.also { orientationWatch = null }

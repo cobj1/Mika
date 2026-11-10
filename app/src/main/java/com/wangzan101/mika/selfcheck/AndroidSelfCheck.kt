@@ -509,14 +509,14 @@ class AndroidSelfCheck(context: Context, private val status: () -> SystemStatus)
         return null
     }
 
-    /** 实时画面(缩小的那一份)的指纹;还没有画面为 null。 */
+    /** 自检按需读取内部画面，不能依赖用户是否展开预览。 */
     private fun frameHash(d: AgentDisplay): Int? {
-        val bmp = d.frames.value ?: return null
+        val bmp = d.latestFrameBitmap() ?: return null
         return runCatching {
             val px = IntArray(bmp.width * bmp.height)
             bmp.getPixels(px, 0, bmp.width, 0, 0, bmp.width, bmp.height)
             px.contentHashCode()
-        }.getOrNull()
+        }.getOrNull().also { bmp.recycle() }
     }
 
     private suspend fun poll(timeoutMs: Long = VERIFY_MS, block: suspend () -> Boolean): Boolean {

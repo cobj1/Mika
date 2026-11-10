@@ -416,23 +416,38 @@ private fun MikaRoot(
             onTeachOpened()
         }
     }
-    // 第一次打开:欢迎 → 配置模型 → 手机操作;配过模型的跳过前两步,手机操作已就绪或看过引导的跳过最后一步
+    // 首次先授权无障碍，再配置模型；保存后只邀请解锁高级功能，用户点击后才开始调试设置。
     val onboardingState = remember { OnboardingState(context) }
+    val accessibilityService by com.wangzan101.mika.cap.phone.a11y.ScreenAccessibility.instance.collectAsState()
+    var awaitingAccessibility by rememberSaveable { mutableStateOf(false) }
     fun onboardingInputs() = Onboarding.Inputs(
         hasMainModel = store.roles.value.main != null,
         modelSetupDone = onboardingState.modelSetupDone(),
         phoneNeeded = status.builtinShell != BuiltinShellStatus.Running && status.sdkInt >= Prerequisites.MIN_SDK,
         phoneGuideSeen = phoneSetup.guideSeen(),
+        accessibilityConnected = accessibilityService != null,
+        accessibilityGuideSeen = onboardingState.accessibilityGuideSeen(),
+        advancedPromptSeen = onboardingState.advancedPromptSeen(),
     )
     fun goOnboarding(step: OnboardingStep?) {
         onboarding = step
         when (step) {
             // 上手的每一步都直接放在对话页上面一层,做完回到对话页
             OnboardingStep.Welcome -> nav.show(Route.Welcome)
+            OnboardingStep.Accessibility -> nav.show(Route.AccessibilitySetup)
             OnboardingStep.Model -> nav.show(Route.ModelSetup)
+            OnboardingStep.Advanced -> nav.show(Route.AdvancedFeatures)
             OnboardingStep.Phone -> { setupRepair = false; nav.show(Route.PhoneSetup) }
             null -> nav.reset()
         }
+    }
+    fun finishAccessibility() {
+        awaitingAccessibility = false
+        onboardingState.markAccessibilityGuideSeen()
+        goOnboarding(Onboarding.next(OnboardingStep.Accessibility, onboardingInputs()))
+    }
+    LaunchedEffect(accessibilityService, awaitingAccessibility, onboarding) {
+        if (onboarding == OnboardingStep.Accessibility && awaitingAccessibility && accessibilityService != null) finishAccessibility()
     }
     LaunchedEffect(Unit) {
         if (onboarding == null) Onboarding.start(onboardingInputs())?.let(::goOnboarding)
@@ -448,12 +463,29 @@ private fun MikaRoot(
             phoneSetup.markGuideSeen()
             if (onboarding == OnboardingStep.Phone) goOnboarding(null) else nav.back()
         }
-        Route.Welcome -> WelcomeScreen { goOnboarding(OnboardingStep.Model) }
+        Route.Welcome -> WelcomeScreen { goOnboarding(Onboarding.next(OnboardingStep.Welcome, onboardingInputs())) }
+        Route.AccessibilitySetup -> AccessibilityOnboardingScreen(
+            connected = accessibilityService != null,
+            onOpen = { awaitingAccessibility = true; onFix(Fix.OpenAccessibility) },
+            onAppInfo = { onFix(Fix.OpenAppInfo) },
+            onSkip = ::finishAccessibility,
+            onContinue = ::finishAccessibility,
+        )
+        Route.AdvancedFeatures -> AdvancedFeaturesScreen(
+            modelSaved = hasMain,
+            onEnable = {
+                onboardingState.markAdvancedPromptSeen()
+                val next = Onboarding.next(OnboardingStep.Advanced, onboardingInputs())
+                goOnboarding(next)
+                if (next == OnboardingStep.Phone) PhoneServices.of(context).setupAutomation.start()
+            },
+            onLater = { onboardingState.markAdvancedPromptSeen(); goOnboarding(null) },
+        )
         Route.ModelSetup -> {
             val inOnboarding = onboarding == OnboardingStep.Model
             ModelSetupScreen(
                 store, onboarding = inOnboarding,
-                onBack = { if (inOnboarding) goOnboarding(OnboardingStep.Welcome) else nav.back() },
+                onBack = { if (inOnboarding) goOnboarding(OnboardingStep.Accessibility) else nav.back() },
                 onDone = {
                     if (inOnboarding) {
                         onboardingState.markModelSetupDone()
@@ -494,6 +526,7 @@ private fun MikaRoot(
                             vm = app.chat,
                             check = check,
                             frames = app.taskState.frames,
+                            previewRuns = app.taskState.runs,
                             webOpen = app.tasks.webScreenOpen,
                             reduceMotion = MikaTheme.reduceMotion,
                             onOpenDrawer = openDrawer,
@@ -542,11 +575,13 @@ private fun MikaRoot(
             val autonomous by app.approvals.autonomous.collectAsState()
             SettingsScreen(store, status, release, onFix, onBack = back, onOpenMemory = { nav.push(Route.Memory) },
                 onOpenModels = { nav.push(Route.Models) },
+                onOpenJev = { nav.push(Route.Jev) },
                 autonomous = autonomous, onAutonomous = app.approvalControl::setAutonomous,
                 updateVersion = updateState.update?.version, onOpenAbout = { nav.push(Route.About) },
                 mcpServers = app.mcpServers)
         }
         Route.Models -> ModelsScreen(store, onBack = back, onOpenSpeech = { nav.push(Route.SpeechModel) }, onOpenUsage = { nav.push(Route.Usage) })
+        Route.Jev -> JevScreen(onBack = back)
         Route.Usage -> UsageScreen(app.usage, store.providers, onBack = back)
         Route.SpeechModel -> SpeechModelScreen(store, onBack = back)
         Route.About -> AboutScreen(

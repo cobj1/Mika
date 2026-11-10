@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_access_title">فعّل إمكانية الوصول أولاً</string>
+    <string name="onboarding_access_body">فعّل Mika في إعدادات إمكانية الوصول في النظام ليتمكن من قراءة الواجهة وتشغيل التطبيقات نيابةً عنك. أنت تقرر منح الإذن. بعد ذلك اضبط نموذج الذكاء الاصطناعي، ويمكن تفعيل التحكم المتقدم بالهاتف لاحقاً.</string>
+    <string name="onboarding_access_open">السماح بإمكانية الوصول</string>
+    <string name="onboarding_access_continue">متابعة إعداد النموذج</string>
+    <string name="onboarding_access_connected">تم توصيل خدمة إمكانية الوصول في Mika.</string>
+    <string name="onboarding_access_app_info">يتعذر التفعيل؟ اسمح بالإعدادات المقيّدة من معلومات التطبيق.</string>
+    <string name="onboarding_later">لاحقاً</string>
+    <string name="onboarding_advanced_title">تفعيل الميزات المتقدمة</string>
+    <string name="onboarding_advanced_body">دع Mika يشغّل التطبيقات على شاشة منفصلة في الخلفية. يبدأ الزر أدناه إرشادك لتفعيل خيارات المطوّر وتصحيح أخطاء USB والتصحيح اللاسلكي والإقران. لا تحتاج المحادثة ومهام الويب والملفات إلى هذه الخطوة.</string>
+    <string name="onboarding_advanced_enable">تفعيل الميزات المتقدمة</string>
+    <string name="onboarding_advanced_confirmation">هذا الإعداد مجاني واختياري. عليك إدخال كلمة مرور قفل الشاشة وتأكيد طلبات النظام بنفسك.</string>
+    <string name="onboarding_model_saved">تم حفظ النموذج</string>
+</resources>

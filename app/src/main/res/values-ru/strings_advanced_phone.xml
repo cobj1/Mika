@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_advanced_title">Включить расширенное управление телефоном</string>
+    <string name="setup_advanced_intro">Откройте настройку параметров разработчика, отладки по USB и Wi-Fi и сопряжения. Модель ИИ для этого не нужна.</string>
+    <string name="setup_advanced_ready">Расширенное управление включено</string>
+    <string name="setup_advanced_ready_body">Специальные возможности и помощник телефона подключены. Ниже можно проверить состояние или повторить сопряжение.</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_advanced_title">高度なスマートフォン操作を有効にする</string>
+    <string name="setup_advanced_intro">開発者向けオプション、USB デバッグ、ワイヤレス デバッグ、ペア設定をガイドに沿って設定します。AI モデルは不要です。</string>
+    <string name="setup_advanced_ready">高度なスマートフォン操作は有効です</string>
+    <string name="setup_advanced_ready_body">ユーザー補助とスマートフォンのヘルパーは接続済みです。下で状態の確認や再ペア設定ができます。</string>
+</resources>

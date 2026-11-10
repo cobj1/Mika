@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_access_title">先開啟無障礙</string>
+    <string name="onboarding_access_body">請在系統無障礙設定中開啟 Mika，讓它讀取介面並替你操作應用程式。是否授權由你決定。完成後設定大模型，進階手機操作可以稍後開啟。</string>
+    <string name="onboarding_access_open">授權無障礙</string>
+    <string name="onboarding_access_continue">繼續設定模型</string>
+    <string name="onboarding_access_connected">Mika 無障礙服務已連線。</string>
+    <string name="onboarding_access_app_info">無法開啟？前往應用程式資訊允許受限制的設定。</string>
+    <string name="onboarding_later">稍後</string>
+    <string name="onboarding_advanced_title">解鎖進階功能</string>
+    <string name="onboarding_advanced_body">讓 Mika 在獨立的背景畫面上替你操作應用程式。點選下方按鈕後，將引導開啟開發人員選項、USB 偵錯、無線偵錯並完成配對。聊天、網頁和檔案任務不需要這一步。</string>
+    <string name="onboarding_advanced_enable">解鎖進階功能</string>
+    <string name="onboarding_advanced_confirmation">這是可選的免費設定。螢幕鎖定密碼和系統確認仍需你手動完成。</string>
+    <string name="onboarding_model_saved">模型已儲存</string>
+</resources>

@@ -92,8 +92,12 @@ class AppAccessScreenPort(
     // ---------- 读屏 ----------
     override suspend fun snapshot() = observed { inner.snapshot() }
     override suspend fun peek() = observed { inner.peek() }
+    override suspend fun viewport() = checked { inner.viewport() }
     override suspend fun screenshotPng() = checked { inner.screenshotPng() }
+    override suspend fun observationFrame(afterNanos: Long, shouldEncode: (com.wangzan101.mika.core.visual.FramePreview) -> Boolean) =
+        checked { inner.observationFrame(afterNanos, shouldEncode) }
     override suspend fun readVisibleText() = checked { inner.readVisibleText() }
+    override suspend fun verifyText(text: String?, region: List<Int>) = checked { inner.verifyText(text, region) }
     override suspend fun frameGrid() = checked { inner.frameGrid() }
     override suspend fun isProtected() = checked { inner.isProtected() }
     override suspend fun checkScreen() = checked { inner.checkScreen() }
@@ -111,6 +115,17 @@ class AppAccessScreenPort(
     override suspend fun swipe(x1: Int, y1: Int, x2: Int, y2: Int, durationMs: Long) = checked { inner.swipe(x1, y1, x2, y2, durationMs) }
     override suspend fun idleScroll(fraction: Double) = checked { inner.idleScroll(fraction) }
     override suspend fun gesture(paths: List<List<Pair<Int, Int>>>, durationMs: Long) = checked { inner.gesture(paths, durationMs) }
+    override suspend fun pointer(op: String, pointerId: Int, x: Int, y: Int): ActionResult {
+        // 取消不是新的操作：即使前台已进入禁用 App，也必须允许释放本任务的手指。
+        if (op == "cancel") return inner.pointer(op, pointerId, x, y)
+        return try { checked { inner.pointer(op, pointerId, x, y) } }
+        catch (failure: Throwable) {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                runCatching { inner.pointer("cancel", 0, 0, 0) }
+            }
+            throw failure
+        }
+    }
     override suspend fun back() = checked { inner.back() }
     override suspend fun pressKey(keyCode: Int) = checked { inner.pressKey(keyCode) }
     override suspend fun setWheel(ref: String, snapshotId: String, value: String) = checked { inner.setWheel(ref, snapshotId, value) }

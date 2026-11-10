@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_advanced_title">تفعيل التحكم المتقدم في الهاتف</string>
+    <string name="setup_advanced_intro">افتح دليل إعداد خيارات المطوّر وتصحيح أخطاء USB والتصحيح اللاسلكي والاقتران. لا يحتاج هذا الإعداد إلى نموذج ذكاء اصطناعي.</string>
+    <string name="setup_advanced_ready">التحكم المتقدم في الهاتف مفعّل</string>
+    <string name="setup_advanced_ready_body">خدمة تسهيل الاستخدام ومساعد الهاتف متصلان. يمكنك مراجعة الحالة أو إعادة الاقتران أدناه.</string>
+</resources>

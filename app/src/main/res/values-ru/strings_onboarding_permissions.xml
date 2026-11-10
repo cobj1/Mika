@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_access_title">Сначала включите специальные возможности</string>
+    <string name="onboarding_access_body">Включите Mika в настройках специальных возможностей системы, чтобы приложение могло читать интерфейс и управлять приложениями. Вы сами решаете, предоставлять ли доступ. Затем настройте модель ИИ; расширенное управление телефоном можно включить позже.</string>
+    <string name="onboarding_access_open">Разрешить специальные возможности</string>
+    <string name="onboarding_access_continue">Перейти к настройке модели</string>
+    <string name="onboarding_access_connected">Служба специальных возможностей Mika подключена.</string>
+    <string name="onboarding_access_app_info">Не удаётся включить? Разрешите ограниченные настройки в сведениях о приложении.</string>
+    <string name="onboarding_later">Позже</string>
+    <string name="onboarding_advanced_title">Включить расширенные функции</string>
+    <string name="onboarding_advanced_body">Mika сможет управлять приложениями на отдельном фоновом экране. Кнопка ниже запускает настройку параметров разработчика, отладки по USB, беспроводной отладки и сопряжения. Для чата, веб-задач и работы с файлами этот шаг не нужен.</string>
+    <string name="onboarding_advanced_enable">Включить расширенные функции</string>
+    <string name="onboarding_advanced_confirmation">Настройка бесплатна и необязательна. Пароль блокировки и системные подтверждения нужно вводить самостоятельно.</string>
+    <string name="onboarding_model_saved">Модель сохранена</string>
+</resources>

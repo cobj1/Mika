@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="local_mode_title">Escolha como executar a IA</string>
+    <string name="local_mode_body">Use um modelo neste telemóvel ou ligue um serviço online. Pode mudar depois nas Definições.</string>
+    <string name="local_model_title">Modelos no telemóvel</string>
+    <string name="local_model_entry">Descarregue, verifique e ative um modelo principal local</string>
+    <string name="local_mode_local_body">Descarregue um modelo e execute-o neste telemóvel sem chave API.</string>
+    <string name="local_mode_local">Escolher modelo local</string>
+    <string name="local_mode_online">Usar modelo online</string>
+    <string name="local_mode_online_body">Inicie sessão ou introduza os dados da API para ligar um serviço.</string>
+    <string name="local_model_intro">Só é descarregado o modelo escolhido. Após verificar, toque em Usar como modelo principal; a Mika testa-o antes de mudar. O modelo leve também passa a local e o modelo visual online é desativado. Pode alterar depois nas Definições.</string>
+    <string name="local_model_limits">Os modelos de texto usam texto, controlos do ecrã e OCR; não interpretam imagens diretamente. Modelos menores usam menos recursos. A qualidade e velocidade de tarefas complexas precisam de testes no telemóvel. A inferência local dispensa opções de programador; controlar apps requer configuração adicional.</string>
+    <string name="local_model_activating">A testar o modelo local…</string>
+    <string name="local_model_size">Download: %1$s</string>
+    <string name="local_model_recommended">Sugerido para os recursos atuais</string>
+    <string name="local_model_current">Modelo principal atual</string>
+    <string name="local_model_use">Usar como modelo principal</string>
+    <string name="local_model_leave_note">Sair pausa os downloads ou interrompe a configuração. Os downloads parciais podem continuar.</string>
+    <string name="local_error_unsupported">Este dispositivo não suporta o ambiente local.</string>
+    <string name="local_error_memory">Memória disponível insuficiente. Feche outras apps e tente novamente.</string>
+    <string name="local_error_storage">Espaço insuficiente. Liberte espaço e tente novamente.</string>
+    <string name="local_error_download">O download falhou. Verifique a ligação; os dados parciais são mantidos.</string>
+    <string name="local_error_integrity">A verificação falhou. Descarregue o modelo novamente.</string>
+    <string name="local_error_runtime">O modelo local não foi executado. Tente novamente ou escolha outro.</string>
+    <string name="local_error_timeout">O modelo local excedeu o tempo limite. Tente novamente ou escolha um menor.</string>
+    <string name="local_error_busy">Já existe uma operação local em curso. Aguarde um momento.</string>
+    <string name="local_error_active_delete">Mude para outro modelo principal antes de eliminar este.</string>
+    <string name="local_error_model_missing">Descarregue e verifique este modelo primeiro.</string>
+</resources>

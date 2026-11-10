@@ -380,6 +380,8 @@ class CapsuleController(
         else watchPreview(detail?.takeIf { CapsuleCards.showsScreen(it.content) }?.run?.run?.key)
         val w = window ?: openWindows(service)
         if (w == null) {
+            // 窗口创建失败时同样释放预览租约，避免不可见卡片持续请求缩略图。
+            resetCard()
             view = null
             card = null
             _showing.value = false
@@ -836,9 +838,13 @@ class CapsuleController(
         zoomed = false
         val run = key?.let(::runFor) ?: return
         previewJob = scope.launch {
-            launch { run.frames.collect { if (it == null) preview = null } }
-            run.frames.filterNotNull().previewFrames(same = ::sameFrame).flowOn(Dispatchers.Default).collect {
-                preview = it.takeIf { run.frames.value != null }
+            val lease = run.retainPreview()
+            try {
+                run.frames.revocablePreviewFrames(same = ::sameFrame).flowOn(Dispatchers.Default).collect {
+                    preview = it.takeIf { run.frames.value != null }
+                }
+            } finally {
+                lease.close()
             }
         }
     }

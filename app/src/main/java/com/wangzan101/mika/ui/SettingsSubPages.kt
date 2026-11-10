@@ -64,10 +64,22 @@ fun PhoneOpsScreen(
     onRepair: () -> Unit,
     onUnpair: () -> Unit,
     onBack: () -> Unit,
+    onSetup: () -> Unit = {},
 ) {
     val check = Prerequisites.check(status, hasMainModel = true)
     var confirmUnpair by remember { mutableStateOf(false) }
     PageScaffold(stringResource(R.string.settings_phone_ops), onBack) {
+        if (status.sdkInt >= Prerequisites.MIN_SDK) {
+            val ready = status.builtinShell == BuiltinShellStatus.Running &&
+                status.accessibility == com.wangzan101.mika.settings.AccessibilityState.On
+            GroupCard {
+                ListRow(MikaIcons.Spark,
+                    stringResource(if (ready) R.string.setup_advanced_ready else R.string.setup_advanced_title),
+                    stringResource(if (ready) R.string.setup_advanced_ready_body else R.string.setup_advanced_intro),
+                    first = true, onClick = if (ready) null else onSetup,
+                ) { if (!ready) RowChevron() }
+            }
+        }
         GroupLabel(stringResource(R.string.settings_status))
         GroupCard {
             val (a11yText, a11yTone) = StatusCopy.accessibilityValue(status.accessibility)

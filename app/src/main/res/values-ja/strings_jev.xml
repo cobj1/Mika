@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jev_title">OCR 結果の確認</string>
+    <string name="jev_intro">Jev は認識された文字を元の画像と比較します。この端末内で動作し、チャットモデルの代わりにはなりません。</string>
+    <string name="jev_download_note">必要に応じて約 1.95 GB をダウンロードします。確認中も画像と文字は端末内に留まります。</string>
+    <string name="jev_download">ダウンロード／再開</string>
+    <string name="jev_stop">停止</string>
+    <string name="jev_remove">モデルを削除</string>
+    <string name="jev_remove_confirm">ダウンロード済みのモデルファイルを削除しますか？後で再ダウンロードできます。</string>
+    <string name="jev_ready">モデルの準備ができました</string>
+    <string name="jev_downloading">モデルをダウンロード中…</string>
+    <string name="jev_verifying">ダウンロードしたファイルを検証中…</string>
+    <string name="jev_loading">モデルを読み込み中…</string>
+    <string name="jev_scoring">文字を確認中…</string>
+    <string name="jev_progress">%1$d%%</string>
+    <string name="jev_leave_note">このページを離れると、ダウンロードは一時停止し、確認は停止します。未完了のダウンロードは再開できます。</string>
+    <string name="jev_input_title">文字領域を確認</string>
+    <string name="jev_crop_hint">1 行または 1 段落の画像を選ぶか、下の境界スライダーで切り抜き、OCR の文字を貼り付けてください。表や数式は対応していません。</string>
+    <string name="jev_choose_image">画像を選択</string>
+    <string name="jev_image_selected">画像を選択しました</string>
+    <string name="jev_text_label">OCR の認識文字</string>
+    <string name="jev_text_count">%1$d / %2$d</string>
+    <string name="jev_score">この端末で確認</string>
+    <string name="jev_score_value">一致度スコア：%1$s</string>
+    <string name="jev_score_note">スコアが高いほど、文字が画像と一致する可能性が高くなります。この端末と OCR 入力に対して校正されていない参考値であり、端末操作の成功を示すものではありません。</string>
+    <string name="jev_download_error">ダウンロードできませんでした。ネットワークを確認して再試行してください。取得済みの部分は保持されます。</string>
+    <string name="jev_integrity_error">モデルファイルの検証に失敗しました。再ダウンロードしてください。</string>
+    <string name="jev_no_space">保存容量が不足しています。空き容量を増やして再試行してください。</string>
+    <string name="jev_memory_low">使用可能なメモリが不足しています。他のアプリを閉じて再試行してください。</string>
+    <string name="jev_runtime_error">確認エンジンを実行できませんでした。再試行してください。</string>
+    <string name="jev_image_error">選択した画像を読み込めません。別の画像を選んでください。</string>
+    <string name="jev_input_error">文字領域の画像を選び、OCR の文字を 1～1000 文字入力してください。</string>
+    <string name="jev_timeout">確認がタイムアウトしました。より小さい画像か短い文字で試してください。</string>
+    <string name="jev_unavailable">この端末では Jev のローカル確認を利用できません。</string>
+    <string name="jev_cached">このページを開いている間の最近の結果を再利用しました。モデルは再読み込みしていません。</string>
+    <string name="jev_timing">読み込み %1$s 秒 · 評価 %2$s 秒</string>
+    <string name="jev_crop_horizontal">左右の境界</string>
+    <string name="jev_crop_vertical">上下の境界</string>
+    <string name="jev_crop_reset">画像全体に戻す</string>
+    <string name="jev_text_layout_error">行数が多すぎます。1行または1段落のテキストにしてください。</string>
+    <string name="jev_device_ready">現在のリソースは初期チェックを通過しました。実際の動作はこの端末で確認してください。</string>
+    <string name="jev_busy">別の端末内テキストチェックが実行中です。しばらくしてから再試行してください。</string>
+    <string name="jev_recheck">端末を再確認</string>
+    <string name="jev_read_image">選択範囲から文字を認識</string>
+    <string name="jev_ocr_empty">使用できる文字を認識できませんでした。範囲を調整するか、手動で入力してください。</string>
+    <string name="jev_crop_detail">選択範囲</string>
+</resources>

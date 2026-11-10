@@ -249,6 +249,10 @@ data class ModelSetupUi(
     /** 选好了主模型就能「下一步」。 */
     val canNext: Boolean get() = roles.main != null
 
+    /** 首次流程自动前进：主模型已选、保存结束，且登录说明已经确认。 */
+    val onboardingReady: Boolean get() = canNext && !showForm && form.test == ListState.Idle &&
+        !chatGptWelcome && !accountSignIn.running && chatGptSignIn != ListState.Running
+
     /** 这个用途实际用的配置(「用主模型」时是主模型的)。 */
     fun configFor(role: ModelRole): ProviderConfig? = roles.resolve(role)?.let { id -> configs.firstOrNull { it.id == id } }
 

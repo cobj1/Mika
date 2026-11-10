@@ -149,6 +149,8 @@ import com.wangzan101.mika.voice.HoldToTalk
 import com.wangzan101.mika.voice.VoiceSource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
+import androidx.lifecycle.compose.LifecycleStartEffect
+import com.wangzan101.mika.task.TaskRun
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -183,14 +185,23 @@ fun ChatScreen(
     openSpeechModel: () -> Unit = {},
     /** 输入框里还没发出的字，交给「教 Mika」预填，不会自己开始。 */
     onOpenTeach: (String) -> Unit = {},
+    /** 可见小窗请求手机或网页预览；后台任务仍可继续内部观察。 */
+    previewRuns: StateFlow<List<TaskRun>>? = null,
 ) {
     val ui by vm.ui.collectAsState()
+    val phoneRuns = previewRuns?.collectAsState()?.value.orEmpty()
     val others by vm.otherRunning.collectAsState()
     val keptAny by vm.keptPage.collectAsState()
     // 只管这个对话留下的那一页
     val kept = keptAny?.takeIf { it.conversationId == ui.conversationId }
     val live by frames.collectAsState()
     val webLive by webOpen.collectAsState()
+    val previewRun = phoneRuns.firstOrNull { it.conversationId == ui.conversationId }
+    val previewVisible = ui.pip.visible && !ui.pip.closed
+    LifecycleStartEffect(previewRun, previewVisible) {
+        val lease = if (previewVisible) previewRun?.retainPreview() else null
+        onStopOrDispose { lease?.close() }
+    }
     // 任务一结束虚拟屏就释放了;完成时小窗还要停留几秒打勾,继续显示最后一帧
     var lastFrame by remember { mutableStateOf<Bitmap?>(null) }
     var lastFrameWasWeb by remember { mutableStateOf(false) }

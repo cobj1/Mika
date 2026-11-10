@@ -1,0 +1,11 @@
+{
+  "upstream": "https://github.com/ggml-org/llama.cpp",
+  "revision": "a4d4f2fd4ec85ec6a0a9ece4870416c1b6cc24f5",
+  "ndk": "28.2.13676358",
+  "cmake": "3.22.1",
+  "abi": "arm64-v8a",
+  "minSdk": 30,
+  "file": "app/src/main/jniLibs/arm64-v8a/libjevserver.so",
+  "sha256": "427d3cab60f625db693d2cb16071a38970307b576b415389d768eaf48bc44ad9",
+  "bytes": 11865872
+}

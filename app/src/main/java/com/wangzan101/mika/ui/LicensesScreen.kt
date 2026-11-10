@@ -50,6 +50,8 @@ object Licenses {
 
     val ENTRIES = listOf(
         Entry("Mika", "Apache-2.0", "Mika 本身,包括运行环境的启动器、其中的 mika 命令与技能脚本。许可证全文见本页顶上。"),
+        Entry("Jev 本机运行时", "MIT / Apache-2.0 / 其他", "llama.cpp a4d4f2fd4ec85ec6a0a9ece4870416c1b6cc24f5 及其静态依赖，用于本地文字生成和 OCR 校验。完整许可证列在本页下方；重建脚本在 tools/jev/。Jev 模型由用户另行下载，遵循 Apache-2.0。"),
+        Entry("Qwen 本地主模型", "Apache-2.0", "Qwen3 0.6B / 1.7B 官方 GGUF，用户按需下载；权重不随 APK 附带。官方仓库 huggingface.co/Qwen，完整许可证列在本页下方。"),
         Entry("PRoot", "GPL-2.0-or-later", "运行 Python、Node 等程序用的环境,版本 5.4.0,打了一个补丁(PRoot 退出时结束所有子进程)。$GPL_SOURCE_OFFER"),
         Entry("talloc", "LGPL-3.0-or-later", "版本 2.4.3,未修改,静态链接进 PRoot 程序。可用 tools/sandbox/ 的源码与脚本重新链接。"),
         Entry("Apache Commons Compress", "Apache-2.0", "首次启动时解包自带的运行环境。Copyright 2002-2025 The Apache Software Foundation."),
@@ -88,6 +90,12 @@ fun LicensesScreen(onBack: () -> Unit) {
         runCatching { context.assets.open("runtime/packages.json").use { Licenses.runtimePackages(it.readBytes().decodeToString()) } }
             .getOrDefault(emptyList())
     }
+    val jevLicenses = remember {
+        runCatching { context.assets.open("licenses/JevRuntime.txt").use { it.readBytes().decodeToString() } }.getOrDefault("")
+    }
+    val qwenLicense = remember {
+        runCatching { context.assets.open("licenses/QwenLocal.txt").use { it.readBytes().decodeToString() } }.getOrDefault("")
+    }
     val thirdParty = Licenses.ENTRIES.filter { it.name != "Mika" } + runtime
     SubPage(AboutCopy.LICENSE_TITLE, onBack) {
         if (licenseText.isNotEmpty()) {
@@ -109,6 +117,14 @@ fun LicensesScreen(onBack: () -> Unit) {
             }
         }
         FooterNote(stringResource(R.string.licenses_footer))
+        if (jevLicenses.isNotEmpty()) {
+            GroupLabel("Jev / llama.cpp")
+            Text(jevLicenses, Modifier.padding(16.dp), style = MikaType.Hint.copy(fontFamily = FontFamily.Monospace), color = MikaTheme.colors.ink2)
+        }
+        if (qwenLicense.isNotEmpty()) {
+            GroupLabel("Qwen3")
+            Text(qwenLicense, Modifier.padding(16.dp), style = MikaType.Hint.copy(fontFamily = FontFamily.Monospace), color = MikaTheme.colors.ink2)
+        }
     }
 }
 

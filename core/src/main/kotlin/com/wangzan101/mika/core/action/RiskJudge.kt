@@ -21,7 +21,7 @@ fun interface RiskJudge {
 /** 按现有的不可逆判定和读屏信号分级;花不花钱按动作类别和屏上的金额认,不按 App。 */
 object ClassifiedRisk : RiskJudge {
     /** 改界面上东西的动作;其余写操作(返回、滑动、打开 App、打开网址)只是在界面间移动。 */
-    private val CHANGE_VERBS = setOf(Verb.Tap, Verb.TypeText, Verb.ClearText, Verb.PressKey, Verb.Upload, Verb.Interact)
+    private val CHANGE_VERBS = setOf(Verb.Tap, Verb.PhoneTouch, Verb.TypeText, Verb.ClearText, Verb.PressKey, Verb.Upload, Verb.Interact)
 
     /** 这个动作会改界面上的东西(不只是在界面间移动);不可逆、对外的动作也都是这几种动作做出来的。 */
     fun changesState(verb: Verb?): Boolean = verb in CHANGE_VERBS

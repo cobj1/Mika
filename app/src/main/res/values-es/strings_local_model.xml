@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="local_mode_title">Elige cómo ejecutar la IA</string>
+    <string name="local_mode_body">Usa un modelo en este teléfono o conecta un servicio en línea. Puedes cambiarlo después en Ajustes.</string>
+    <string name="local_model_title">Modelos en el teléfono</string>
+    <string name="local_model_entry">Descarga, comprueba y activa un modelo principal local</string>
+    <string name="local_mode_local_body">Descarga un modelo y ejecútalo en este teléfono sin clave API.</string>
+    <string name="local_mode_local">Elegir modelo local</string>
+    <string name="local_mode_online">Usar modelo en línea</string>
+    <string name="local_mode_online_body">Inicia sesión o introduce los datos de API para conectar un servicio.</string>
+    <string name="local_model_intro">Solo se descarga el modelo que elijas. Tras verificarlo, pulsa Usar como modelo principal; Mika lo probará antes de cambiar. También cambia el modelo ligero al local y desactiva el modelo visual en línea. Puedes cambiarlo después en Ajustes.</string>
+    <string name="local_model_limits">Los modelos de texto usan texto, controles de pantalla y OCR; no comprenden imágenes directamente. Los modelos pequeños consumen menos recursos. La calidad y velocidad de tareas complejas deben probarse en tu teléfono. La inferencia local no requiere opciones de desarrollador; controlar apps requiere otra configuración.</string>
+    <string name="local_model_activating">Probando el modelo local…</string>
+    <string name="local_model_size">Descarga: %1$s</string>
+    <string name="local_model_recommended">Sugerido según los recursos actuales</string>
+    <string name="local_model_current">Modelo principal actual</string>
+    <string name="local_model_use">Usar como modelo principal</string>
+    <string name="local_model_leave_note">Salir pausa las descargas o detiene la configuración. Las descargas parciales pueden reanudarse.</string>
+    <string name="local_error_unsupported">Este dispositivo no admite el entorno local.</string>
+    <string name="local_error_memory">No hay suficiente memoria disponible. Cierra otras apps y reintenta.</string>
+    <string name="local_error_storage">No hay espacio suficiente. Libera espacio y reintenta.</string>
+    <string name="local_error_download">Falló la descarga. Comprueba la conexión; los datos parciales se conservan.</string>
+    <string name="local_error_integrity">Falló la verificación. Descarga el modelo de nuevo.</string>
+    <string name="local_error_runtime">El modelo local no pudo ejecutarse. Reintenta o elige otro.</string>
+    <string name="local_error_timeout">Se agotó el tiempo del modelo local. Reintenta o elige uno más pequeño.</string>
+    <string name="local_error_busy">Ya hay una operación de modelo local en curso. Espera un momento.</string>
+    <string name="local_error_active_delete">Cambia a otro modelo principal antes de eliminar este.</string>
+    <string name="local_error_model_missing">Primero descarga y verifica este modelo.</string>
+</resources>

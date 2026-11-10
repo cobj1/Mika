@@ -7,6 +7,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ModelErrorReasonTest {
+    @Test fun localEngineFailureDoesNotSendUsersToNetworkOrAccountSettings() {
+        val error = ModelError.LocalUnavailable("当前可用内存不足。")
+        val reason = StopRules.modelFailed(error).reason
+        assertTrue(reason.contains("可用内存不足"))
+        assertTrue(reason.contains("设置 › 模型"))
+        assertFalse(reason.contains("Base URL"))
+        assertFalse(reason.contains("账户"))
+        assertFalse(RetryPolicy.transient(error))
+    }
     /** 找不到模型:知道模型名时说清是哪个、去哪改、模型名大概长什么样;不知道时退回一般的说法。 */
     @Test fun modelNotFoundNamesTheModel() {
         assertEquals(

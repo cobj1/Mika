@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jev_title">التحقق من نص OCR</string>
+    <string name="jev_intro">يقارن Jev النص المستخرج بالصورة الأصلية. يعمل على هذا الجهاز ولا يحل محل نموذج المحادثة.</string>
+    <string name="jev_download_note">تنزيل اختياري بحجم 1.95 غيغابايت تقريبًا. تبقى الصور والنصوص على الجهاز أثناء التحقق.</string>
+    <string name="jev_download">تنزيل / استئناف</string>
+    <string name="jev_stop">إيقاف</string>
+    <string name="jev_remove">حذف النموذج</string>
+    <string name="jev_remove_confirm">هل تريد حذف ملفات النموذج المنزّلة؟ يمكنك تنزيلها مجددًا لاحقًا.</string>
+    <string name="jev_ready">النموذج جاهز</string>
+    <string name="jev_downloading">جارٍ تنزيل النموذج…</string>
+    <string name="jev_verifying">جارٍ التحقق من الملفات المنزّلة…</string>
+    <string name="jev_loading">جارٍ تحميل النموذج…</string>
+    <string name="jev_scoring">جارٍ التحقق من النص…</string>
+    <string name="jev_progress">%1$d%%</string>
+    <string name="jev_leave_note">مغادرة هذه الصفحة توقف التنزيل مؤقتًا أو تنهي التحقق. يمكن استئناف التنزيل غير المكتمل.</string>
+    <string name="jev_input_title">التحقق من منطقة نص</string>
+    <string name="jev_crop_hint">اختر صورة لسطر أو فقرة، أو اقتصّها بمنزلقات الحدود أدناه، ثم ألصق نص OCR. الجداول والمعادلات غير مدعومة.</string>
+    <string name="jev_choose_image">اختيار صورة</string>
+    <string name="jev_image_selected">تم اختيار صورة</string>
+    <string name="jev_text_label">نص OCR</string>
+    <string name="jev_text_count">%1$d / %2$d</string>
+    <string name="jev_score">التحقق على هذا الجهاز</string>
+    <string name="jev_score_value">درجة التطابق: %1$s</string>
+    <string name="jev_score_note">تعني الدرجة الأعلى احتمالًا أكبر لتطابق النص مع الصورة. لم تُعاير الدرجة لهذا الجهاز ومدخلات OCR الحالية؛ ولا تثبت نجاح أي إجراء على الهاتف.</string>
+    <string name="jev_download_error">فشل التنزيل. تحقق من الشبكة وحاول مجددًا؛ تُحفظ الأجزاء المنزّلة.</string>
+    <string name="jev_integrity_error">لم تجتز ملفات النموذج التحقق. يرجى تنزيلها مجددًا.</string>
+    <string name="jev_no_space">مساحة التخزين غير كافية. حرر مساحة وحاول مجددًا.</string>
+    <string name="jev_memory_low">الذاكرة المتاحة غير كافية. أغلق تطبيقات أخرى وحاول مجددًا.</string>
+    <string name="jev_runtime_error">تعذر تشغيل محرك التحقق. يرجى المحاولة مجددًا.</string>
+    <string name="jev_image_error">تعذرت قراءة الصورة المحددة. اختر صورة أخرى.</string>
+    <string name="jev_input_error">اختر صورة منطقة نص وأدخل من 1 إلى 1000 حرف من نص OCR.</string>
+    <string name="jev_timeout">انتهت مهلة التحقق. جرّب صورة أصغر أو نصًا أقصر.</string>
+    <string name="jev_unavailable">هذا الجهاز لا يدعم التحقق المحلي باستخدام Jev.</string>
+    <string name="jev_cached">أُعيد استخدام نتيجة حديثة من الزيارة الحالية للصفحة، دون تحميل النموذج مجددًا.</string>
+    <string name="jev_timing">التحميل %1$s ث · التقييم %2$s ث</string>
+    <string name="jev_crop_horizontal">الحدان الأيسر والأيمن</string>
+    <string name="jev_crop_vertical">الحدان العلوي والسفلي</string>
+    <string name="jev_crop_reset">استعادة الصورة كاملة</string>
+    <string name="jev_text_layout_error">عدد الأسطر كبير جدًا. استخدم سطرًا واحدًا أو فقرة واحدة من النص.</string>
+    <string name="jev_device_ready">اجتازت الموارد الحالية الفحوص الأولية. يجب تقييم الأداء الفعلي على هذا الهاتف.</string>
+    <string name="jev_busy">يجري فحص محلي آخر للنص. يُرجى المحاولة لاحقًا.</string>
+    <string name="jev_recheck">إعادة فحص الجهاز</string>
+    <string name="jev_read_image">التعرّف على النص في المنطقة المحددة</string>
+    <string name="jev_ocr_empty">لم يتم التعرّف على نص قابل للاستخدام. عدّل المنطقة أو أدخل النص يدويًا.</string>
+    <string name="jev_crop_detail">المنطقة المحددة</string>
+</resources>

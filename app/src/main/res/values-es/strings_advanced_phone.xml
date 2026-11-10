@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_advanced_title">Activar el control avanzado del teléfono</string>
+    <string name="setup_advanced_intro">Abre la guía para configurar las opciones de desarrollador, la depuración USB e inalámbrica y la vinculación. No requiere un modelo de IA.</string>
+    <string name="setup_advanced_ready">El control avanzado está activado</string>
+    <string name="setup_advanced_ready_body">La accesibilidad y el asistente del teléfono están conectados. Consulta su estado o vuelve a vincularlos abajo.</string>
+</resources>

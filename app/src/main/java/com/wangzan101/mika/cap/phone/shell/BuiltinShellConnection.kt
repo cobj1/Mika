@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import com.wangzan101.mika.shell.IMikaShell
 
 /**
- * 内置助手的连接。助手进程常驻,不跟着解绑结束:解绑时让它撤掉这次的改动([IMikaShell.releaseAll]),
- * 效果与服务结束相同;再绑定时直接用手里的 Binder。没有助手时请看门狗起一个。
+ * 内置助手的连接。解绑撤掉活动屏和系统改动；异常退出后已停放的屏保留至原定的恢复超时。
+ * 再绑定时直接用手里的 Binder。没有助手时请看门狗起一个。
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BuiltinShellConnection(hub: HelperHub, need: () -> Unit) : ShellBinding {
@@ -18,7 +18,7 @@ class BuiltinShellConnection(hub: HelperHub, need: () -> Unit) : ShellBinding {
     private val link = HelperLink(
         hub.shell,
         CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1)),
-        release = { it.releaseAll() },
+        release = { it.releaseSessionResources() },
         need = need,
     )
 

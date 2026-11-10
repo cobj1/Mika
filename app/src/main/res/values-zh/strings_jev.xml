@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jev_title">文字识别校验</string>
+    <string name="jev_intro">Jev 对照原图检查识别文字是否一致，在本机运行，不替代聊天模型。</string>
+    <string name="jev_download_note">可选下载约 1.95 GB。校验时图片和文字留在本机。</string>
+    <string name="jev_download">下载／继续下载</string>
+    <string name="jev_stop">停止</string>
+    <string name="jev_remove">删除模型</string>
+    <string name="jev_remove_confirm">删除已下载的模型文件？之后可以重新下载。</string>
+    <string name="jev_ready">模型已就绪</string>
+    <string name="jev_downloading">正在下载模型…</string>
+    <string name="jev_verifying">正在校验下载文件…</string>
+    <string name="jev_loading">正在加载模型…</string>
+    <string name="jev_scoring">正在校验文字…</string>
+    <string name="jev_progress">%1$d%%</string>
+    <string name="jev_leave_note">离开此页面会暂停下载或停止校验，未完成的下载可继续。</string>
+    <string name="jev_input_title">校验文字区域</string>
+    <string name="jev_crop_hint">选择单行或单段文字图片，或用下方边界滑杆裁剪，再粘贴 OCR 文字。不支持表格或公式。</string>
+    <string name="jev_choose_image">选择图片</string>
+    <string name="jev_image_selected">已选择图片</string>
+    <string name="jev_text_label">OCR 识别文字</string>
+    <string name="jev_text_count">%1$d / %2$d</string>
+    <string name="jev_score">在本机校验</string>
+    <string name="jev_score_value">一致性评分：%1$s</string>
+    <string name="jev_score_note">分数越高，文字与原图一致的可能性越大。分数仅供参考，尚未针对本机和当前 OCR 校准；不代表手机操作成功。</string>
+    <string name="jev_download_error">下载失败，请检查网络后重试，已下载的部分会保留。</string>
+    <string name="jev_integrity_error">模型文件校验失败，请重新下载。</string>
+    <string name="jev_no_space">存储空间不足，请清理后重试。</string>
+    <string name="jev_memory_low">当前可用内存不足，请关闭其他应用后重试。</string>
+    <string name="jev_runtime_error">校验引擎无法运行，请重试。</string>
+    <string name="jev_image_error">无法读取所选图片，请重新选择。</string>
+    <string name="jev_input_error">请选择文字区域图片，并输入 1～1000 字的 OCR 文字。</string>
+    <string name="jev_timeout">校验超时，请尝试更小的图片或更短的文字。</string>
+    <string name="jev_unavailable">这台设备暂不支持本机 Jev 校验。</string>
+    <string name="jev_cached">复用本次页面内最近的校验结果，未重新加载模型。</string>
+    <string name="jev_timing">加载 %1$s 秒 · 评分 %2$s 秒</string>
+    <string name="jev_crop_horizontal">左右边界</string>
+    <string name="jev_crop_vertical">上下边界</string>
+    <string name="jev_crop_reset">恢复整张图片</string>
+    <string name="jev_text_layout_error">文字行数过多，请缩小到单行或单段文字。</string>
+    <string name="jev_device_ready">当前资源满足初步检查，运行效果需以本机校验为准。</string>
+    <string name="jev_busy">另一个本机文字校验正在运行，请稍后重试。</string>
+    <string name="jev_recheck">重新检查设备</string>
+    <string name="jev_read_image">从所选区域识别文字</string>
+    <string name="jev_ocr_empty">未识别到可用文字，请调整区域或手动输入。</string>
+    <string name="jev_crop_detail">所选区域</string>
+</resources>

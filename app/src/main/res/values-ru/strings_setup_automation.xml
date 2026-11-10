@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_auto_title">Автоматическая настройка</string>
+    <string name="setup_auto_start">Начать автонастройку</string>
+    <string name="setup_auto_stop">Остановить</string>
+    <string name="setup_auto_intro">Сначала вручную включите службу специальных возможностей Mika. Затем Mika включит параметры разработчика, отладку по USB и Wi-Fi и выполнит сопряжение. Пароль блокировки экрана и подтверждения системы нужно вводить вручную.</string>
+    <string name="setup_auto_enable_accessibility">Вручную включите службу специальных возможностей Mika в настройках системы. После подключения службы настройка продолжится автоматически.</string>
+    <string name="setup_auto_developer">Включаем параметры разработчика…</string>
+    <string name="setup_auto_usb">Включаем отладку по USB…</string>
+    <string name="setup_auto_wireless">Открываем отладку по Wi-Fi…</string>
+    <string name="setup_auto_pairing">Открываем окно сопряжения. Mika прочитает код и выполнит сопряжение автоматически.</string>
+    <string name="setup_auto_confirm">Подтвердите действие или личность на экране системы. После этого настройка продолжится автоматически.</string>
+    <string name="setup_auto_manual">Автонастройка приостановлена. Вернитесь в Mika и выполните шаги вручную или попробуйте ещё раз.</string>
+    <string name="setup_auto_stopped">Автонастройка остановлена. Можно продолжить вручную или начать заново.</string>
+    <string name="setup_auto_done">Настройка управления телефоном завершена.</string>
+</resources>

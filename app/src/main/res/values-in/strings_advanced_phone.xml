@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_advanced_title">Aktifkan kontrol ponsel lanjutan</string>
+    <string name="setup_advanced_intro">Buka panduan untuk menyiapkan opsi pengembang, proses debug USB dan nirkabel, serta penyandingan. Penyiapan ini tidak memerlukan model AI.</string>
+    <string name="setup_advanced_ready">Kontrol ponsel lanjutan sudah aktif</string>
+    <string name="setup_advanced_ready_body">Aksesibilitas dan asisten ponsel sudah terhubung. Periksa status atau sandingkan ulang di bawah.</string>
+</resources>

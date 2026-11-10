@@ -27,6 +27,7 @@ class PhoneOcrTest {
         canvas.drawText("HELLO OCR", 80f, 350f, paint)
 
         val lines = PhoneOcr.read(bitmap)
+        assertTrue("两套异步模型均结束后输入应已释放", bitmap.isRecycled)
         assertTrue(lines.toString(), lines.any { "中文" in it.text })
         assertTrue(lines.toString(), lines.any { "HELLO" in it.text.uppercase() })
     }

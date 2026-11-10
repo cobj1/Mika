@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jev_title">Verificar texto OCR</string>
+    <string name="jev_intro">Jev compara o texto reconhecido com a imagem original. Funciona neste dispositivo e não substitui o modelo de conversa.</string>
+    <string name="jev_download_note">Download opcional: cerca de 1.95 GB. Imagens e texto permanecem no dispositivo durante a verificação.</string>
+    <string name="jev_download">Baixar / continuar</string>
+    <string name="jev_stop">Parar</string>
+    <string name="jev_remove">Excluir modelo</string>
+    <string name="jev_remove_confirm">Excluir os arquivos do modelo baixados? Você poderá baixá-los novamente.</string>
+    <string name="jev_ready">Modelo pronto</string>
+    <string name="jev_downloading">Baixando modelo…</string>
+    <string name="jev_verifying">Verificando arquivos baixados…</string>
+    <string name="jev_loading">Carregando modelo…</string>
+    <string name="jev_scoring">Verificando texto…</string>
+    <string name="jev_progress">%1$d%%</string>
+    <string name="jev_leave_note">Ao sair desta página, o download é pausado ou a verificação é interrompida. Downloads incompletos podem ser retomados.</string>
+    <string name="jev_input_title">Verificar uma região de texto</string>
+    <string name="jev_crop_hint">Escolha uma imagem de uma linha ou parágrafo, ou recorte-a com os controles de borda abaixo. Cole o texto OCR. Tabelas e fórmulas não são compatíveis.</string>
+    <string name="jev_choose_image">Escolher imagem</string>
+    <string name="jev_image_selected">Imagem selecionada</string>
+    <string name="jev_text_label">Texto OCR</string>
+    <string name="jev_text_count">%1$d / %2$d</string>
+    <string name="jev_score">Verificar neste dispositivo</string>
+    <string name="jev_score_value">Pontuação de correspondência: %1$s</string>
+    <string name="jev_score_note">Pontuações maiores indicam maior probabilidade de o texto corresponder à imagem. A pontuação não foi calibrada para este dispositivo e OCR; ela não comprova o sucesso de uma ação no telefone.</string>
+    <string name="jev_download_error">Falha no download. Verifique a rede e tente novamente; as partes baixadas são mantidas.</string>
+    <string name="jev_integrity_error">Os arquivos do modelo falharam na verificação. Baixe-os novamente.</string>
+    <string name="jev_no_space">Espaço insuficiente. Libere espaço e tente novamente.</string>
+    <string name="jev_memory_low">Memória disponível insuficiente. Feche outros aplicativos e tente novamente.</string>
+    <string name="jev_runtime_error">Não foi possível executar o mecanismo de verificação. Tente novamente.</string>
+    <string name="jev_image_error">Não foi possível ler a imagem selecionada. Escolha outra.</string>
+    <string name="jev_input_error">Escolha uma imagem de texto e insira de 1 a 1000 caracteres de OCR.</string>
+    <string name="jev_timeout">A verificação excedeu o tempo limite. Tente uma imagem menor ou um texto mais curto.</string>
+    <string name="jev_unavailable">Este dispositivo não oferece suporte à verificação local com Jev.</string>
+    <string name="jev_cached">Um resultado recente desta visita à página foi reutilizado, sem carregar o modelo novamente.</string>
+    <string name="jev_timing">Carregamento %1$s s · Avaliação %2$s s</string>
+    <string name="jev_crop_horizontal">Bordas esquerda e direita</string>
+    <string name="jev_crop_vertical">Bordas superior e inferior</string>
+    <string name="jev_crop_reset">Restaurar imagem inteira</string>
+    <string name="jev_text_layout_error">Há linhas demais. Use uma única linha ou um parágrafo de texto.</string>
+    <string name="jev_device_ready">Os recursos atuais passaram nas verificações iniciais. O desempenho real deve ser avaliado neste telefone.</string>
+    <string name="jev_busy">Outra verificação local de texto está em andamento. Tente novamente mais tarde.</string>
+    <string name="jev_recheck">Verificar dispositivo novamente</string>
+    <string name="jev_read_image">Reconhecer texto da região selecionada</string>
+    <string name="jev_ocr_empty">Nenhum texto utilizável foi reconhecido. Ajuste a região ou digite o texto manualmente.</string>
+    <string name="jev_crop_detail">Região selecionada</string>
+</resources>

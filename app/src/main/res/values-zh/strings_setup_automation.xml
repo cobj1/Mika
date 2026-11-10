@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_auto_title">自动设置</string>
+    <string name="setup_auto_start">开始自动设置</string>
+    <string name="setup_auto_stop">停止</string>
+    <string name="setup_auto_intro">先手动开启 Mika 无障碍服务，Mika 将自动开启开发者选项、USB 调试和无线调试，并完成配对。锁屏密码和系统确认仍需你手动完成。</string>
+    <string name="setup_auto_enable_accessibility">请在系统设置中手动开启 Mika 无障碍服务，服务连接后将自动继续设置。</string>
+    <string name="setup_auto_developer">正在开启开发者选项…</string>
+    <string name="setup_auto_usb">正在开启 USB 调试…</string>
+    <string name="setup_auto_wireless">正在打开无线调试…</string>
+    <string name="setup_auto_pairing">正在打开配对窗口，Mika 将自动读取配对码并配对。</string>
+    <string name="setup_auto_confirm">请在系统页面完成确认或身份验证，完成后将自动继续。</string>
+    <string name="setup_auto_manual">自动设置已暂停。请返回 Mika 按步骤手动完成，或重新尝试。</string>
+    <string name="setup_auto_stopped">自动设置已停止，你可以手动继续或重新开始。</string>
+    <string name="setup_auto_done">手机操作设置已完成。</string>
+</resources>

@@ -58,6 +58,9 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import com.wangzan101.mika.core.net.NetProxy
+import com.wangzan101.mika.localmodel.LocalChatModel
+import com.wangzan101.mika.localmodel.LocalModelCatalog
+import com.wangzan101.mika.localmodel.LocalModelSpec
 import okhttp3.OkHttpClient
 import java.io.File
 import java.util.Base64
@@ -295,9 +298,16 @@ class ProviderStore(
      * 建可调用的模型:配置、Key、服务商列表里给这个模型单独指定的接口(没有为 null,按配置的接口类型和地址)、请求头等。
      * 为 null 时用内置的适配器(测试里换成假的)。
      */
+    private val localModelFactory: ((String) -> ChatModel)? = null,
     modelFactory: ((ProviderConfig, String?, ModelEndpoint?, ClientSetup) -> ChatModel)? = null,
 ) {
-    private val modelFactory: (ProviderConfig, String?, ModelEndpoint?, ClientSetup) -> ChatModel = modelFactory ?: ::buildModel
+    private val remoteModelFactory: (ProviderConfig, String?, ModelEndpoint?, ClientSetup) -> ChatModel = modelFactory ?: ::buildModel
+    private val modelFactory: (ProviderConfig, String?, ModelEndpoint?, ClientSetup) -> ChatModel = { cfg, key, endpoint, setup ->
+        if (cfg.baseUrl == LocalModelCatalog.BASE_URL) {
+            if (LocalModelCatalog.find(cfg.model) == null) throw ModelError.LocalUnavailable("所选本地模型不存在。")
+            localModelFactory?.invoke(cfg.model) ?: throw ModelError.LocalUnavailable("此环境未安装本地推理引擎。")
+        } else remoteModelFactory(cfg, key, endpoint, setup)
+    }
     /** 每个 ChatGPT 服务商一份:同一时刻只有一个在换令牌。 */
     private val chatGptTokens = mutableMapOf<String, ChatGptTokens>()
     /** 每个订阅账号一份,和 ChatGPT 一样同一时刻只有一个在换令牌。 */
@@ -466,6 +476,34 @@ class ProviderStore(
         return choose(role, RoleChoice.Model(id))
     }
 
+    /** 本地试运行成功后的单次提交；三种用途一起落盘，写入失败还原内存状态。 */
+    @Synchronized
+    fun activateLocalModel(spec: LocalModelSpec, installed: List<ListedModel>) {
+        require(LocalModelCatalog.find(spec.id) == spec && installed.any { it.id == spec.id })
+        val previousProviders = _providers.value
+        val previousConfigs = _configs.value
+        val previousRoles = _roles.value
+        val existing = previousProviders.firstOrNull { it.baseUrl == LocalModelCatalog.BASE_URL }
+        val provider = (existing ?: Provider(newId(), LocalModelCatalog.PROVIDER_NAME,
+            ProviderConfig.Kind.OpenAiCompat, LocalModelCatalog.BASE_URL)).copy(
+                models = installed.mapNotNull { LocalModelCatalog.find(it.id)?.listed() }.distinctBy { it.id },
+                verifiedModels = existing?.verifiedModels.orEmpty() + spec.id, savedUntested = false, sessionHeader = null)
+        val configId = previousConfigs.firstOrNull { it.providerId == provider.id && it.model == spec.id }?.id ?: newId()
+        val config = ProviderConfig(configId, ProviderConfig.Kind.OpenAiCompat, LocalModelCatalog.BASE_URL,
+            spec.id, spec.capabilities, provider.name, provider.id)
+        try {
+            _providers.value = previousProviders.filterNot { it.id == provider.id } + provider
+            _configs.value = listOf(config)
+            _roles.value = RoleChoices(main = configId, vision = RoleChoice.Off, light = RoleChoice.SameAsMain)
+            writeConfig()
+        } catch (failure: Throwable) {
+            _providers.value = previousProviders
+            _configs.value = previousConfigs
+            _roles.value = previousRoles
+            throw failure
+        }
+    }
+
     /**
      * 定一个用途:用户选什么就是什么,不看能力标记。选具体模型当主模型时把工具调用标记记为 true(运行时据此发工具定义);
      * 看图标记不改存着的,在 [configFor] 里按当下的选择推出来,换走了就跟着回去。之后没人用的配置删掉。
@@ -546,6 +584,11 @@ class ProviderStore(
     fun configFor(role: ModelRole): ProviderConfig? {
         val choices = _roles.value
         val cfg = choices.resolve(role)?.let { id -> _configs.value.firstOrNull { it.id == id } } ?: return null
+        if (cfg.baseUrl == LocalModelCatalog.BASE_URL) {
+            if (role == ModelRole.Vision) return null
+            val spec = LocalModelCatalog.find(cfg.model) ?: return null
+            return cfg.copy(capabilities = spec.capabilities)
+        }
         val sees = role == ModelRole.Vision || ModelOptions.seesImages(cfg.capabilities.vision,
             provider(cfg.providerId)?.visionOverrides?.get(cfg.model), usedForVision = choices.resolve(ModelRole.Vision) == cfg.id)
         return if (sees == cfg.capabilities.vision) cfg else cfg.copy(capabilities = cfg.capabilities.copy(vision = sees))
@@ -567,7 +610,7 @@ class ProviderStore(
         val source = UsageSource(cfg.providerId, p?.name ?: cfg.name, cfg.model, UsagePurpose.of(role))
         val listed = listedOf(cfg)
         val settings = p?.contextSettings?.get(cfg.model)
-        val configured = if (settings == null) cfg else cfg.copy(capabilities = cfg.capabilities.copy(
+        val configured = if (settings == null || cfg.baseUrl == LocalModelCatalog.BASE_URL) cfg else cfg.copy(capabilities = cfg.capabilities.copy(
             contextTokens = settings.windowTokens ?: cfg.capabilities.contextTokens,
             compactionTriggerTokens = settings.triggerTokens,
         ))
@@ -612,7 +655,8 @@ class ProviderStore(
 
     /** 列出这个服务商的可用模型(见 [ModelCatalog]);不属于任何对话,声明了会话头的用新的会话号。 */
     suspend fun listModels(kind: ProviderConfig.Kind, baseUrl: String, apiKey: String?, sessionHeader: String? = null): ModelListResult =
-        modelLister(kind, baseUrl, apiKey, headers(sessionHeader, ModelSession.fresh()))
+        if (baseUrl == LocalModelCatalog.BASE_URL) ModelListResult.Ok(_providers.value.firstOrNull { it.baseUrl == baseUrl }?.models.orEmpty())
+        else modelLister(kind, baseUrl, apiKey, headers(sessionHeader, ModelSession.fresh()))
 
     /** 重新列一个已连接服务商的模型:用存着的 Key;订阅登录用访问令牌(快过期先换新的)。 */
     suspend fun listModels(p: Provider): ModelListResult {
@@ -1195,7 +1239,8 @@ class ProviderStore(
 
         /** 产品里的那份(App 建):配置在 files/settings 下,Key 用 Android 密钥库加密,用量记到 [usage]。 */
         fun create(context: Context, usage: UsageSink, userAgent: String): ProviderStore =
-            ProviderStore(File(context.applicationContext.filesDir, "settings"), KeystoreKeyCipher(), usage, userAgent = userAgent)
+            ProviderStore(File(context.applicationContext.filesDir, "settings"), KeystoreKeyCipher(), usage, userAgent = userAgent,
+                localModelFactory = { LocalChatModel(context.applicationContext, it) })
 
         /** App 内共用的那份(经 [Owner] 给出)。 */
         fun get(context: Context): ProviderStore = (context.applicationContext as? Owner)?.providers

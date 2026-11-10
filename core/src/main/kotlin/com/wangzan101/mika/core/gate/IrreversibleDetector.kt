@@ -170,6 +170,8 @@ object IrreversibleDetector {
     fun needsCheck(target: GateTarget?, args: JsonObject): Boolean = when (target) {
         // 上传要点文件控件,和点击一样判
         GateTarget.Tap, GateTarget.FileControl -> true
+        // 按下、移动、抬起都可能激活控件；只有取消不会提交动作。
+        GateTarget.Pointer -> str(args, "op") in listOf("down", "move", "up")
         // 打字带回车时判;往一点上打字时那一下点击也判(点到的可能是发送一类的按钮)
         GateTarget.Enter -> bool(args, "pressEnter") || atPoint(args)
         GateTarget.Key -> key(args) in ACTIVATING_KEYS
@@ -190,7 +192,7 @@ object IrreversibleDetector {
     fun classify(target: GateTarget?, args: JsonObject, snapshot: ScreenSnapshot?, fresh: ScreenSnapshot? = null): Irreversible? {
         if (!needsCheck(target, args)) return null
         return when (target) {
-            GateTarget.Tap, GateTarget.FileControl -> tapHit(args, snapshot, fresh)
+            GateTarget.Tap, GateTarget.Pointer, GateTarget.FileControl -> tapHit(args, snapshot, fresh)
             GateTarget.Enter -> (if (atPoint(args)) tapHit(args, snapshot, fresh) else null)
                 ?: if (bool(args, "pressEnter")) enterHit(args, snapshot, fresh ?: snapshot, KEY_ENTER) else null
             GateTarget.Key -> enterHit(args, snapshot, fresh ?: snapshot, key(args)!!)
@@ -310,7 +312,7 @@ object IrreversibleDetector {
 
     /** 点击找不到作用在哪个元素上(读屏缺失、编号不属于这次读屏、坐标处没有元素);供运行记录留痕。 */
     fun unresolved(target: GateTarget?, args: JsonObject, snapshot: ScreenSnapshot?, fresh: ScreenSnapshot? = null): Boolean =
-        target == GateTarget.Tap && tapTargets(args, snapshot, fresh).isEmpty()
+        (target == GateTarget.Tap || target == GateTarget.Pointer && needsCheck(target, args)) && tapTargets(args, snapshot, fresh).isEmpty()
 
     /**
      * 按钮名匹配词表;[screen] 给了时,通用的「确认/确定」看同屏有没有强词或金额。

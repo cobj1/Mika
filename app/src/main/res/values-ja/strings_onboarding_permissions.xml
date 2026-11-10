@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_access_title">まずユーザー補助を有効にする</string>
+    <string name="onboarding_access_body">システムのユーザー補助設定で Mika を有効にすると、画面を読み取り、アプリを操作できます。許可するかどうかは自分で選べます。その後 AI モデルを設定します。高度なスマートフォン操作は後で有効にできます。</string>
+    <string name="onboarding_access_open">ユーザー補助を許可</string>
+    <string name="onboarding_access_continue">モデル設定に進む</string>
+    <string name="onboarding_access_connected">Mika のユーザー補助サービスに接続しました。</string>
+    <string name="onboarding_access_app_info">有効にできない場合は、アプリ情報で制限付き設定を許可してください。</string>
+    <string name="onboarding_later">後で</string>
+    <string name="onboarding_advanced_title">高度な機能を有効にする</string>
+    <string name="onboarding_advanced_body">Mika が専用のバックグラウンド画面でアプリを操作します。下のボタンを押すと、開発者向けオプション、USB デバッグ、ワイヤレスデバッグとペア設定の案内を開始します。チャット、ウェブ、ファイルのタスクには不要です。</string>
+    <string name="onboarding_advanced_enable">高度な機能を有効にする</string>
+    <string name="onboarding_advanced_confirmation">この設定は無料で任意です。画面ロックのパスワード入力とシステムの確認は自分で行います。</string>
+    <string name="onboarding_model_saved">モデルを保存しました</string>
+</resources>
